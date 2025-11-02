@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Focus Check</title>
+  <title>Register - Focus Check</title>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='Favicon.svg') }}">
   <style>
     * {
@@ -19,31 +19,32 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      padding: 20px;
     }
 
-    .login-container {
+    .register-container {
       background: white;
       padding: 40px;
       border-radius: 16px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
       border: 1px solid #e8ebf0;
       width: 100%;
-      max-width: 400px;
+      max-width: 450px;
     }
 
-    .login-header {
+    .register-header {
       text-align: center;
       margin-bottom: 30px;
     }
 
-    .login-header h1 {
+    .register-header h1 {
       color: #1e293b;
       font-size: 28px;
       margin-bottom: 10px;
       font-weight: 700;
     }
 
-    .login-header p {
+    .register-header p {
       color: #64748b;
       font-size: 14px;
     }
@@ -60,7 +61,8 @@
       font-size: 14px;
     }
 
-    .form-group input {
+    .form-group input,
+    .form-group select {
       width: 100%;
       padding: 12px 15px;
       border: 2px solid #e0e0e0;
@@ -69,13 +71,14 @@
       transition: all 0.3s ease;
     }
 
-    .form-group input:focus {
+    .form-group input:focus,
+    .form-group select:focus {
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
-    .login-btn {
+    .register-btn {
       width: 100%;
       padding: 12px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -88,12 +91,12 @@
       transition: all 0.3s ease;
     }
 
-    .login-btn:hover {
+    .register-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
     }
 
-    .login-btn:active {
+    .register-btn:active {
       transform: translateY(0);
     }
 
@@ -113,95 +116,135 @@
       display: block;
     }
 
-    .demo-credentials {
+    .success-message {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 14px;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    .login-link {
       background: #f0f7ff;
       border: 1px solid #d0e7ff;
       border-radius: 12px;
       padding: 16px;
       margin-top: 24px;
+      text-align: center;
     }
 
-    .demo-credentials h3 {
-      color: #667eea;
-      font-size: 14px;
-      margin-bottom: 12px;
-      font-weight: 600;
-    }
-
-    .demo-credentials p {
+    .login-link p {
       color: #64748b;
-      font-size: 13px;
-      margin: 5px 0;
+      font-size: 14px;
     }
 
-    .demo-credentials code {
-      background: #e7f3ff;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-family: 'Courier New', monospace;
+    .login-link a {
       color: #667eea;
+      text-decoration: none;
       font-weight: 600;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    .role-info {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 6px;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="login-header">
-      <h1>Focus Check</h1>
-      <p>Login to start tracking your focus sessions</p>
+  <div class="register-container">
+    <div class="register-header">
+      <h1>Create Account</h1>
+      <p>Join Focus Check to start monitoring your learning sessions</p>
     </div>
 
     <div id="errorMessage" class="error-message"></div>
+    <div id="successMessage" class="success-message"></div>
 
-    <form id="loginForm">
+    <form id="registerForm">
       <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required autocomplete="email">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" required placeholder="Enter your full name">
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" required placeholder="Enter your email">
       </div>
 
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password">
+        <input type="password" id="password" name="password" required minlength="6" placeholder="Min. 6 characters">
       </div>
 
-      <button type="submit" class="login-btn">Login</button>
+      <div class="form-group">
+        <label for="role">I am a...</label>
+        <select id="role" name="role" required>
+          <option value="">Select your role</option>
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+        </select>
+        <p class="role-info">Note: Teacher accounts require admin approval</p>
+      </div>
+
+      <button type="submit" class="register-btn">Create Account</button>
     </form>
 
-    <div class="demo-credentials">
-      <h3>New User?</h3>
-      <p><a href="/register" style="color: #667eea; text-decoration: none; font-weight: 600;">Create an account</a></p>
+    <div class="login-link">
+      <p>Already have an account? <a href="/login">Login here</a></p>
     </div>
   </div>
 
   <script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const role = document.getElementById('role').value;
       const errorMessage = document.getElementById('errorMessage');
+      const successMessage = document.getElementById('successMessage');
+
+      // Hide previous messages
+      errorMessage.classList.remove('show');
+      successMessage.classList.remove('show');
 
       try {
-        const response = await fetch('/auth/login', {
+        const response = await fetch('/auth/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ name, email, password, role })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          // Redirect to dashboard - backend will route based on role
-          window.location.href = '/dashboard';
-        } else {
-          errorMessage.textContent = data.error || 'Invalid credentials';
-          errorMessage.classList.add('show');
+          successMessage.textContent = data.message + ' Redirecting to login...';
+          successMessage.classList.add('show');
 
+          // Redirect to login after 2 seconds
           setTimeout(() => {
-            errorMessage.classList.remove('show');
-          }, 3000);
+            window.location.href = '/login';
+          }, 2000);
+        } else {
+          errorMessage.textContent = data.error || 'Registration failed';
+          errorMessage.classList.add('show');
         }
       } catch (error) {
         errorMessage.textContent = 'An error occurred. Please try again.';

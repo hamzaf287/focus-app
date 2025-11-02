@@ -1,45 +1,91 @@
-# Focus Check - AI-Powered Focus Tracking Application
+# FocusCheck - AI-Powered Focus Tracking Application
 
-A webcam-based focus tracking application that uses machine learning to monitor student concentration during study sessions. Built with Flask, PyTorch, and OpenCV.
+A comprehensive webcam-based focus tracking application with role-based access control (Admin, Teacher, Student) that uses machine learning to monitor student concentration during study sessions. Built with Flask, MongoDB, PyTorch, and OpenCV.
 
-![Focus Check](static/Favicon.svg)
+![FocusCheck](static/Favicon.svg)
+
+---
 
 ## Features
 
-- 🎥 **Real-time Webcam Monitoring** - Live camera feed with focus detection
-- 🧠 **AI-Powered Analysis** - ResNet18-based deep learning model for focus detection
-- 📊 **Analytics Dashboard** - Visual charts and statistics of focus patterns
+### For Students
+- 🎥 **Real-time Focus Detection** - Live camera feed with AI-powered focus tracking
+- 📊 **Personal Analytics** - View focus statistics and trends
+- 📚 **Course Enrollment** - Request enrollment in courses (requires teacher approval)
 - 📝 **Session History** - Track all past focus sessions with detailed reports
-- 📄 **PDF Reports** - Download detailed session reports
-- 👤 **User Authentication** - Secure login system with session management
-- 📚 **Course Tracking** - Organize sessions by course/subject
-- 🎨 **Modern UI** - Clean, responsive interface with gradient themes
+- 📄 **PDF Reports** - Download session reports with focus analysis
+
+### For Teachers
+- 👨‍🏫 **Course Management** - Create and manage courses
+- 📹 **Session Creation** - Start focus detection sessions for courses
+- ✅ **Enrollment Approval** - Approve/reject student enrollment requests
+- 📊 **Class Analytics** - View aggregate focus data for courses
+- 📈 **Student Reports** - Monitor individual and class performance
+
+### For Admins
+- 👤 **User Management** - View all users (students, teachers)
+- ✅ **Teacher Approval** - Approve new teacher registrations
+- 📚 **Course Oversight** - Manage all courses in the system
+- 📊 **System Statistics** - Dashboard with system-wide metrics
+
+---
 
 ## Technologies Used
 
 ### Backend
-- **Flask** - Web framework
-- **PyTorch** - Deep learning framework
-- **TorchVision** - Pre-trained models and transformations
+- **Flask 3.0.0** - Web framework with Blueprint architecture
+- **MongoDB Atlas** - Cloud database (PyMongo driver)
+- **PyTorch** - Deep learning framework for focus detection
 - **OpenCV (cv2)** - Computer vision and webcam handling
 - **ReportLab** - PDF generation
+- **bcrypt** - Password hashing
 
 ### Frontend
 - **HTML5/CSS3** - Modern responsive design
-- **JavaScript (Vanilla)** - Interactive UI components
-- **Chart.js** - Data visualization
+- **JavaScript (Vanilla)** - Interactive dashboard components
 - **Remix Icons** - Icon library
-- **Font Awesome** - Additional icons
 
 ### Machine Learning
 - **ResNet18** - Fine-tuned for binary classification (focused/distracted)
-- **Real-time inference** - Frame-by-frame analysis
+- **Real-time inference** - Frame-by-frame analysis during sessions
+
+---
+
+## Architecture
+
+### Role-Based Access Control
+
+**Admin:**
+- Approve/reject teacher registrations
+- View system statistics
+- Manage courses (create, delete, assign teachers)
+
+**Teacher:**
+- Must be approved by admin before creating courses/sessions
+- Create courses and focus detection sessions
+- Approve/reject student enrollment requests
+- View reports for their courses
+
+**Student:**
+- Request enrollment in courses
+- Join active focus detection sessions
+- View personal focus reports and statistics
+
+### Approval Workflows
+
+1. **Teacher Approval:** Teacher registers → Admin approves → Teacher can create courses/sessions
+2. **Student Enrollment:** Student requests enrollment → Teacher approves → Student can join sessions
+
+---
 
 ## Prerequisites
 
 - Python 3.8 or higher
+- MongoDB Atlas account (or local MongoDB instance)
 - Webcam/Camera device
 - Modern web browser (Chrome, Firefox, Edge, Safari)
+
+---
 
 ## Installation
 
@@ -65,240 +111,365 @@ source venv/bin/activate
 ### 3. Install Dependencies
 
 ```bash
-pip install flask
+pip install -r requirements.txt
+```
+
+**Or install manually:**
+
+```bash
+pip install flask flask-pymongo pymongo bcrypt
 pip install torch torchvision
 pip install opencv-python
 pip install reportlab
-pip install pygetwindow
+pip install requests  # For testing
 ```
 
-**Or install all at once:**
+### 4. Configure MongoDB
+
+Edit `config.py` and update the MongoDB URI:
+
+```python
+MONGO_URI = 'your-mongodb-connection-string'
+```
+
+**For MongoDB Atlas:**
+1. Create a cluster at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a database user
+3. Get your connection string
+4. Replace `<password>` with your database user password
+
+### 5. Run the Application
 
 ```bash
-pip install flask torch torchvision opencv-python reportlab pygetwindow
+python app.py
 ```
 
-### 4. Verify Installation
+The application will start on `http://localhost:5000`
 
-```bash
-python -c "import flask, torch, cv2, reportlab; print('All dependencies installed successfully!')"
-```
+---
 
 ## Project Structure
 
 ```
 focus_app/
 │
-├── app.py                      # Main Flask application
-├── focus_model.pth             # Pre-trained ML model
-├── README.md                   # This file
+├── app.py                           # Main Flask application
+├── config.py                        # Configuration (MongoDB, secrets)
+├── requirements.txt                 # Python dependencies
+├── README.md                        # This file
 │
-├── static/                     # Static assets
-│   ├── Favicon.svg            # App icon
-│   ├── script.js              # Dashboard JavaScript
-│   └── style.css              # Dashboard styles
+├── docs/                            # Testing & documentation
+│   ├── WORKFLOW_VERIFICATION_REPORT.md   # Complete verification report
+│   ├── simple_test.py               # End-to-end automated tests
+│   ├── test_approval_workflows.py   # Comprehensive test suite
+│   ├── verify_db_data.py            # MongoDB consistency checker
+│   └── manual_test.md               # Manual testing guide
 │
-└── templates/                  # HTML templates
-    ├── login.html             # Login page
-    ├── index.html             # Dashboard (main page)
-    ├── analytics.html         # Analytics page
-    └── history.html           # Session history page
+├── models/                          # Database models
+│   ├── user_model.py                # User model (students, teachers, admins)
+│   ├── course_model.py              # Course model
+│   ├── session_model.py             # Focus session model
+│   ├── report_model.py              # Focus report model
+│   └── enrollment_model.py          # Enrollment request model
+│
+├── routes/                          # API endpoints
+│   ├── auth_routes.py               # Authentication (login, register, logout)
+│   ├── student_routes.py            # Student endpoints
+│   ├── teacher_routes.py            # Teacher endpoints
+│   └── admin_routes.py              # Admin endpoints
+│
+├── static/                          # Static assets
+│   ├── videos/                      # Video recordings
+│   ├── reports/                     # Generated PDF reports
+│   └── Favicon.svg                  # App icon
+│
+└── templates/                       # HTML templates
+    ├── index.html                   # Landing page
+    ├── login.html                   # Login page
+    ├── register.html                # Registration page
+    ├── student_dashboard.html       # Student dashboard
+    ├── teacher_dashboard.html       # Teacher dashboard
+    └── admin_dashboard.html         # Admin dashboard
 ```
 
-## Configuration
+---
 
-### Default Users
+## Default Accounts
 
-The application comes with demo user accounts:
-
-| Username | Password    | Role    |
-|----------|-------------|---------|
-| student  | focus123    | Student |
-| admin    | admin123    | Admin   |
-| demo     | demo123     | Demo    |
-
-**⚠️ Important:** Change these credentials in production!
-
-### Modify User Credentials
-
-Edit `app.py` line ~15:
+### Admin Account
+Create an admin account using registration or directly in MongoDB:
 
 ```python
-USERS = {
-    'your_username': 'your_password',
-    # Add more users as needed
+# Example: Register via API
+{
+  "name": "Admin User",
+  "email": "admin@focuscheck.com",
+  "password": "admin123",  # Change this!
+  "role": "admin"
 }
 ```
 
-### Secret Key
+### First Teacher
+Register as teacher, then admin must approve before they can create courses.
 
-Update the Flask secret key in `app.py` for production:
+### First Student
+Register as student, then request enrollment in courses.
 
-```python
-app.secret_key = 'your-secret-key-change-this-in-production'
-```
+**⚠️ Important:** Change default passwords in production!
 
-## Running the Application
+---
 
-### 1. Start the Flask Server
+## Testing & Verification
+
+### Run Automated Tests
 
 ```bash
-python app.py
+# Simple end-to-end test (all 10 steps)
+python docs/simple_test.py
+
+# Comprehensive test with detailed output
+python docs/test_approval_workflows.py
+
+# Verify database consistency
+python docs/verify_db_data.py
 ```
 
-The application will start on `http://127.0.0.1:5000`
+### Manual Testing
 
-### 2. Access the Application
+See [docs/manual_test.md](docs/manual_test.md) for curl commands to test all endpoints.
 
-Open your web browser and navigate to:
+### Verification Report
 
+See [docs/WORKFLOW_VERIFICATION_REPORT.md](docs/WORKFLOW_VERIFICATION_REPORT.md) for complete verification documentation including:
+- All issues found and fixed
+- Test results
+- Database schema validation
+- Security verification
+
+---
+
+## API Endpoints
+
+### Authentication
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Login
+- `POST /auth/logout` - Logout
+- `GET /auth/me` - Get current user info
+
+### Student Routes (`/student`)
+- `GET /courses/available` - List available courses
+- `GET /courses/enrolled` - List enrolled courses
+- `POST /courses/<id>/enroll` - Request enrollment
+- `GET /enrollment-requests` - View enrollment requests
+- `GET /sessions/<id>/join` - Join active session
+- `GET /reports` - View focus reports
+- `GET /statistics` - View personal statistics
+
+### Teacher Routes (`/teacher`)
+- `GET /courses` - List teacher's courses
+- `POST /sessions` - Create focus detection session
+- `GET /sessions` - List teacher's sessions
+- `POST /sessions/<id>/end` - End active session
+- `GET /enrollment-requests` - View pending requests
+- `POST /enrollment-requests/<id>/approve` - Approve enrollment
+- `POST /enrollment-requests/<id>/reject` - Reject enrollment
+- `GET /reports/course/<id>` - Course reports
+
+### Admin Routes (`/admin`)
+- `GET /teachers/pending` - List unapproved teachers
+- `POST /teachers/approve/<id>` - Approve teacher
+- `POST /teachers/reject/<id>` - Reject teacher
+- `POST /courses` - Create course
+- `GET /courses` - List all courses
+- `DELETE /courses/<id>` - Delete course
+- `GET /statistics` - System statistics
+
+---
+
+## User Workflows
+
+### Teacher Workflow
+1. Register as teacher
+2. Login (can access dashboard but cannot create resources)
+3. Wait for admin approval
+4. Once approved, create courses
+5. Create focus detection sessions for courses
+6. Approve student enrollment requests
+7. View class and student reports
+
+### Student Workflow
+1. Register as student
+2. Login and view available courses
+3. Request enrollment in desired courses
+4. Wait for teacher approval
+5. Once approved, join active sessions
+6. View personal focus reports and statistics
+
+### Admin Workflow
+1. Login as admin
+2. View pending teacher registrations
+3. Approve/reject teachers
+4. Create courses and assign teachers
+5. Monitor system statistics
+
+---
+
+## MongoDB Collections
+
+### users
+- Students, teachers, and admins
+- Fields: `name`, `email`, `password` (hashed), `role`, `approved` (for teachers), `enrolled_courses` (for students)
+
+### courses
+- Course information
+- Fields: `course_code`, `course_name`, `teacher_id`, `students` (array)
+
+### enrollment_requests
+- Student enrollment requests
+- Fields: `student_id`, `course_id`, `status` (pending/approved/rejected), `created_at`, `updated_at`
+
+### sessions
+- Focus detection sessions
+- Fields: `session_name`, `course_id`, `teacher_id`, `start_time`, `end_time`, `status`
+
+### reports
+- Focus reports for sessions
+- Fields: `session_id`, `student_id`, `course_id`, `focus_percentage`, `focused_frames`, `distracted_frames`, `total_frames`
+
+---
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# MongoDB
+export MONGO_URI="mongodb+srv://user:pass@cluster.mongodb.net/focus_app"
+
+# Flask
+export SECRET_KEY="your-secret-key-here"
+export FLASK_ENV="development"  # or "production"
 ```
-http://localhost:5000
+
+### Config File
+
+Edit `config.py`:
+
+```python
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key'
+    MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/focus_app'
+    SESSION_TYPE = 'filesystem'
+    PERMANENT_SESSION_LIFETIME = 3600  # 1 hour
 ```
 
-### 3. Login
+---
 
-Use one of the demo credentials:
-- **Username:** `student`
-- **Password:** `focus123`
+## Security Features
 
-### 4. Start a Focus Session
+- ✅ Password hashing with bcrypt
+- ✅ Session-based authentication
+- ✅ Role-based access control (RBAC)
+- ✅ Route protection with decorators
+- ✅ Approval workflows (teacher approval, enrollment approval)
+- ✅ Input validation
+- ✅ CSRF protection ready (add flask-wtf for forms)
 
-1. Select a course from the dropdown
-2. Click "Start Session"
-3. Allow camera access when prompted
-4. The AI will track your focus in real-time
-5. Click "Stop Session" when done
-6. View your report and download PDF
-
-## Features Guide
-
-### Dashboard
-- **Live Camera Feed** - See real-time webcam output
-- **Session Controls** - Start/stop focus tracking sessions
-- **Live Statistics** - View focus percentage and frame counts
-- **Session Timer** - Track session duration
-- **Course Selection** - Organize sessions by subject
-
-### Analytics
-- **Focus Trend Chart** - Line graph showing focus over time
-- **Focus Distribution** - Doughnut chart of focused vs distracted time
-- **Study Time Analysis** - Bar chart of time spent per course
-- **Performance Table** - Detailed course performance breakdown
-
-### History
-- **Session Archive** - All past sessions with timestamps
-- **Filter by Course** - View sessions for specific courses
-- **Summary Statistics** - Total sessions, duration, average focus
-- **PDF Downloads** - Export individual session reports
-
-### Profile Dropdown
-- **My Profile** - View user information
-- **Settings** - Configure app preferences
-- **Help & Support** - Get assistance
-- **Logout** - End session securely
+---
 
 ## Troubleshooting
+
+### MongoDB Connection Error
+
+**Issue:** Cannot connect to MongoDB
+
+**Solutions:**
+- Verify MongoDB URI in `config.py`
+- Check network connectivity
+- Whitelist your IP in MongoDB Atlas
+- Verify database user credentials
 
 ### Camera Not Working
 
 **Issue:** Camera feed not showing
 
 **Solutions:**
-- Ensure webcam is connected and not in use by another application
+- Ensure webcam is connected
 - Check browser permissions - allow camera access
 - Try a different browser
 - Restart the Flask server
 
-### Model Loading Error
+### Teacher Cannot Create Sessions
 
-**Issue:** `state_dict` key mismatch or model not found
+**Issue:** 403 error when creating sessions
 
-**Solutions:**
-- Ensure `focus_model.pth` is in the root directory
-- Verify the model file is not corrupted
-- Check PyTorch version compatibility
+**Solution:** Teacher must be approved by admin first. Check approval status:
 
-### Port Already in Use
-
-**Issue:** `Address already in use`
-
-**Solutions:**
-```bash
-# Windows - Kill process on port 5000
-netstat -ano | findstr :5000
-taskkill /PID <PID> /F
-
-# macOS/Linux
-lsof -ti:5000 | xargs kill -9
-```
-
-Or change the port in `app.py`:
 ```python
-app.run(debug=True, port=5001)
+# Via API
+GET /auth/me
+# Response should have: "approved": true
 ```
 
-### Import Errors
+### Student Cannot Join Session
 
-**Issue:** `ModuleNotFoundError`
+**Issue:** Student blocked from joining
 
-**Solution:**
-```bash
-# Reinstall dependencies
-pip install --upgrade flask torch torchvision opencv-python reportlab pygetwindow
+**Solution:** Student must be enrolled in the course. Check enrollment status:
+
+```python
+# Via API
+GET /student/courses/enrolled
+# Course should appear in the list
 ```
+
+---
 
 ## Development
 
 ### Run in Debug Mode
 
-The app runs in debug mode by default:
-
 ```python
-# app.py (line ~end)
+# app.py
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
 ```
 
-Debug mode features:
-- Auto-reload on code changes
-- Detailed error messages
-- Interactive debugger
+### Testing Locally
 
-### Disable Debug for Production
+Use the provided test scripts in `docs/`:
 
-```python
-app.run(debug=False, host='0.0.0.0')
+```bash
+# Ensure Flask app is running on localhost:5000
+python docs/simple_test.py
 ```
 
-## API Endpoints
+---
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Login page |
-| `/login` | POST | Authenticate user |
-| `/logout` | GET | End session |
-| `/dashboard` | GET | Main dashboard |
-| `/analytics` | GET | Analytics page |
-| `/history` | GET | Session history |
-| `/start` | POST | Start focus session |
-| `/stop` | POST | Stop focus session |
-| `/video_feed` | GET | MJPEG video stream |
-| `/live_stats` | GET | Real-time statistics |
-| `/get_session_history` | GET | Fetch all sessions |
-| `/download_report_pdf` | GET | Download latest report |
-| `/download_session_pdf/<id>` | GET | Download specific report |
+## Production Deployment
 
-## Dependencies Version Info
+1. **Disable Debug Mode**
+   ```python
+   app.run(debug=False, host='0.0.0.0', port=5000)
+   ```
 
-```
-Flask>=2.0.0
-torch>=1.9.0
-torchvision>=0.10.0
-opencv-python>=4.5.0
-reportlab>=3.6.0
-pygetwindow>=0.0.9
-```
+2. **Use Environment Variables**
+   - Store `MONGO_URI` and `SECRET_KEY` in environment variables
+   - Never commit credentials to version control
+
+3. **Use HTTPS**
+   - Deploy behind reverse proxy (Nginx, Apache)
+   - Use SSL/TLS certificates
+
+4. **Add Rate Limiting**
+   - Install flask-limiter
+   - Limit login attempts
+
+5. **Change Default Credentials**
+   - Update admin password
+   - Require strong passwords
+
+---
 
 ## Browser Compatibility
 
@@ -307,61 +478,33 @@ pygetwindow>=0.0.9
 - ✅ Edge 90+
 - ✅ Safari 14+
 
-## Performance Tips
-
-1. **Close Unused Applications** - Free up camera resources
-2. **Good Lighting** - Improves model accuracy
-3. **Stable Camera Position** - Better tracking consistency
-4. **Clear Browser Cache** - If experiencing slow performance
-
-## Security Notes
-
-- Change default user credentials before deployment
-- Update Flask secret key for production
-- Use HTTPS in production environments
-- Implement rate limiting for login attempts
-- Add CSRF protection for forms
-
-## Future Enhancements
-
-- [ ] React frontend migration
-- [ ] WebSocket for real-time updates
-- [ ] Multi-user support with database
-- [ ] Email notifications
-- [ ] Mobile app version
-- [ ] Advanced analytics with ML insights
-- [ ] Study recommendations based on focus patterns
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+---
 
 ## License
 
 This project is open source and available under the MIT License.
 
-## Support
+---
 
-For issues and questions:
-- Open an issue on GitHub
-- Contact: support@focuscheck.com (if applicable)
+## Documentation
 
-## Acknowledgments
-
-- PyTorch team for the deep learning framework
-- ResNet18 architecture by Microsoft Research
-- Flask community for the web framework
-- Chart.js for beautiful visualizations
+- [Complete Verification Report](docs/WORKFLOW_VERIFICATION_REPORT.md) - Detailed testing and verification
+- [Manual Testing Guide](docs/manual_test.md) - curl commands for all endpoints
+- [Test Scripts](docs/) - Automated testing scripts
 
 ---
 
-**Made with ❤️ for students who want to improve their focus and productivity**
+## Support
 
-*Version: 1.0.0*
-*Last Updated: 2025*
+For issues and questions:
+- Check [docs/WORKFLOW_VERIFICATION_REPORT.md](docs/WORKFLOW_VERIFICATION_REPORT.md) for troubleshooting
+- Review test scripts in `docs/`
+- Open an issue on GitHub
+
+---
+
+**Made with ❤️ for educational institutions**
+
+*Version: 2.0.0 - Production Ready*
+*Last Updated: November 2025*
+*Status: ✅ All Workflows Verified*

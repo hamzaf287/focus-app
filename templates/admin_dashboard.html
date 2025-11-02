@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - FocusCheck</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .navbar h1 { font-size: 24px; font-weight: 700; }
+    .navbar-right { display: flex; align-items: center; gap: 20px; }
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,0.3); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      color: #1e293b;
+      margin-bottom: 20px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .teacher-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .teacher-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s;
+    }
+    .teacher-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    }
+    .teacher-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .teacher-name {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 16px;
+    }
+    .teacher-email {
+      color: #64748b;
+      font-size: 14px;
+    }
+    .teacher-date {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    .teacher-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-approve {
+      background: #10b981;
+      color: white;
+    }
+    .btn-approve:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+    .btn-reject {
+      background: #ef4444;
+      color: white;
+    }
+    .btn-reject:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+    .empty-state i {
+      font-size: 48px;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #64748b;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+    }
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .tab {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      transition: all 0.3s;
+    }
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    .users-table th {
+      background: #f8fafc;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #64748b;
+      font-size: 13px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .users-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+      font-size: 14px;
+    }
+    .users-table tr:hover {
+      background: #f8fafc;
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-approved {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .btn-delete {
+      background: #ef4444;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+    .btn-delete:hover {
+      background: #dc2626;
+    }
+    .btn-primary {
+      background: #667eea;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    .btn-edit {
+      background: #f59e0b;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-edit:hover {
+      background: #d97706;
+    }
+    .btn-view {
+      background: #667eea;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-view:hover {
+      background: #5568d3;
+    }
+    .courses-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    .courses-table th {
+      background: #f8fafc;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #475569;
+      font-size: 14px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .courses-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+      font-size: 14px;
+    }
+    .courses-table tr:hover {
+      background: #f8fafc;
+    }
+    .course-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 0;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      animation: slideIn 0.3s ease-out;
+    }
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #64748b;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .close-modal:hover {
+      color: #1e293b;
+    }
+    .modal-body {
+      padding: 24px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #374151;
+      font-size: 14px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: #f9fafb;
+    }
+    .btn-cancel {
+      background: #e5e7eb;
+      color: #374151;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-cancel:hover {
+      background: #d1d5db;
+    }
+
+    /* Notification Modal Styles */
+    .notification-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    .notification-modal.show { display: flex; }
+    .notification-content {
+      background: white;
+      border-radius: 12px;
+      padding: 0;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      animation: slideIn 0.3s ease-out;
+      overflow: hidden;
+    }
+    .notification-header {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .notification-header.success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border-bottom: none;
+    }
+    .notification-header.error {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      border-bottom: none;
+    }
+    .notification-header.warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+      border-bottom: none;
+    }
+    .notification-header.info {
+      background: linear-gradient(135deg, #667eea 0%, #5568d3 100%);
+      color: white;
+      border-bottom: none;
+    }
+    .notification-icon {
+      font-size: 28px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .notification-title { font-size: 18px; font-weight: 600; flex: 1; }
+    .notification-body {
+      padding: 24px;
+      color: #374151;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    .notification-footer {
+      padding: 16px 24px;
+      background: #f9fafb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .notification-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .notification-btn-primary { background: #667eea; color: white; }
+    .notification-btn-primary:hover { background: #5568d3; transform: translateY(-1px); }
+    .notification-btn-secondary { background: #e5e7eb; color: #374151; }
+    .notification-btn-secondary:hover { background: #d1d5db; }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Toast Notification Styles */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10001;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: white;
+      border-radius: 8px;
+      padding: 16px 20px;
+      min-width: 300px;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideInRight 0.3s ease-out;
+    }
+    .toast.success { border-left: 4px solid #10b981; }
+    .toast.error { border-left: 4px solid #ef4444; }
+    .toast.warning { border-left: 4px solid #f59e0b; }
+    .toast.info { border-left: 4px solid #667eea; }
+    .toast-icon { font-size: 24px; }
+    .toast.success .toast-icon { color: #10b981; }
+    .toast.error .toast-icon { color: #ef4444; }
+    .toast.warning .toast-icon { color: #f59e0b; }
+    .toast.info .toast-icon { color: #667eea; }
+    .toast-content { flex: 1; }
+    .toast-title { font-weight: 600; color: #111827; margin-bottom: 2px; }
+    .toast-message { font-size: 14px; color: #6b7280; }
+    .toast-close {
+      cursor: pointer;
+      color: #9ca3af;
+      font-size: 18px;
+      transition: color 0.2s;
+    }
+    .toast-close:hover { color: #374151; }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(100px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideOutRight {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(100px); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <h1><i class="ri-focus-3-line"></i> FocusCheck - Admin</h1>
+    <div class="navbar-right">
+      <div class="user-info">
+        <i class="ri-user-line"></i>
+        <span id="userName">Loading...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <i class="ri-logout-box-line"></i> Logout
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Statistics Section -->
+    <div class="stats-grid" id="statsSection">
+      <div class="stat-card">
+        <div class="stat-value" id="totalStudents">-</div>
+        <div class="stat-label"><i class="ri-user-line"></i> Total Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalTeachers">-</div>
+        <div class="stat-label"><i class="ri-user-star-line"></i> Approved Teachers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="pendingTeachers">-</div>
+        <div class="stat-label"><i class="ri-user-add-line"></i> Pending Teachers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalCourses">-</div>
+        <div class="stat-label"><i class="ri-book-line"></i> Total Courses</div>
+      </div>
+    </div>
+
+    <!-- Pending Teachers Section -->
+    <div class="section">
+      <h2><i class="ri-user-add-line"></i> Pending Teacher Approvals</h2>
+      <div id="teacherListContainer">
+        <div class="loading">
+          <i class="ri-loader-4-line"></i> Loading pending teachers...
+        </div>
+      </div>
+    </div>
+
+    <!-- Course Management Section -->
+    <div class="section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2><i class="ri-book-line"></i> Course Management</h2>
+        <button class="btn btn-primary" onclick="showAddCourseModal()">
+          <i class="ri-add-line"></i> Add Course
+        </button>
+      </div>
+      <div id="coursesContainer">
+        <div class="loading">
+          <i class="ri-loader-4-line"></i> Loading courses...
+        </div>
+      </div>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="section">
+      <h2><i class="ri-team-line"></i> User Management</h2>
+      <div class="tabs">
+        <button class="tab active" onclick="switchUserTab('teachers')">All Teachers</button>
+        <button class="tab" onclick="switchUserTab('students')">All Students</button>
+      </div>
+
+      <div id="teachersTab" class="tab-content active">
+        <div id="allTeachersContainer" class="loading">
+          <i class="ri-loader-4-line"></i> Loading teachers...
+        </div>
+      </div>
+
+      <div id="studentsTab" class="tab-content">
+        <div id="allStudentsContainer" class="loading">
+          <i class="ri-loader-4-line"></i> Loading students...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Modal -->
+  <div id="notificationModal" class="notification-modal">
+    <div class="notification-content">
+      <div id="notificationHeader" class="notification-header">
+        <div class="notification-icon"><i id="notificationIcon"></i></div>
+        <div id="notificationTitle" class="notification-title"></div>
+      </div>
+      <div id="notificationBody" class="notification-body"></div>
+      <div class="notification-footer">
+        <button class="notification-btn notification-btn-primary" onclick="closeNotification()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="notification-modal">
+    <div class="notification-content">
+      <div id="confirmHeader" class="notification-header warning">
+        <div class="notification-icon"><i class="ri-alert-line"></i></div>
+        <div id="confirmTitle" class="notification-title">Confirm Action</div>
+      </div>
+      <div id="confirmBody" class="notification-body"></div>
+      <div class="notification-footer">
+        <button class="notification-btn notification-btn-secondary" onclick="closeConfirm(false)">Cancel</button>
+        <button class="notification-btn notification-btn-primary" onclick="closeConfirm(true)" style="background: #ef4444;">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Course Modal -->
+  <div id="courseModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="courseModalTitle">Add Course</h3>
+        <button class="close-modal" onclick="closeCourseModal()">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="courseForm" onsubmit="return false;">
+          <input type="hidden" id="courseId" value="">
+          <div class="form-group">
+            <label for="courseCode">Course Code *</label>
+            <input type="text" id="courseCode" placeholder="e.g., CSCS460ASP2024" required>
+          </div>
+          <div class="form-group">
+            <label for="courseName">Course Name *</label>
+            <input type="text" id="courseName" placeholder="e.g., Software Engineering" required>
+          </div>
+          <div class="form-group">
+            <label for="teacherSelect">Teacher *</label>
+            <select id="teacherSelect" required>
+              <option value="">Select a teacher</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeCourseModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveCourse()">
+          <i class="ri-save-line"></i> Save Course
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Students Modal -->
+  <div id="studentsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="studentsModalTitle">Enrolled Students</h3>
+        <button class="close-modal" onclick="closeStudentsModal()">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="studentsModalContent">
+          <div class="loading">
+            <i class="ri-loader-4-line"></i> Loading students...
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeStudentsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    async function loadUserInfo() {
+      const response = await fetch('/auth/me');
+      const data = await response.json();
+      if (response.ok) {
+        document.getElementById('userName').textContent = data.user.name;
+      } else {
+        window.location.href = '/login';
+      }
+    }
+
+    async function loadStatistics() {
+      try {
+        const response = await fetch('/admin/statistics');
+        const data = await response.json();
+
+        if (response.ok) {
+          document.getElementById('totalStudents').textContent = data.total_students;
+          document.getElementById('totalTeachers').textContent = data.total_teachers;
+          document.getElementById('pendingTeachers').textContent = data.pending_teachers;
+          document.getElementById('totalCourses').textContent = data.total_courses;
+        }
+      } catch (error) {
+        console.error('Error loading statistics:', error);
+      }
+    }
+
+    async function loadPendingTeachers() {
+      try {
+        const response = await fetch('/admin/teachers/pending');
+        const data = await response.json();
+
+        const container = document.getElementById('teacherListContainer');
+
+        if (!response.ok) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-error-warning-line"></i>
+              <p>Error loading teachers: ${data.error}</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (data.teachers.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-user-line"></i>
+              <p>No pending teacher approvals</p>
+            </div>
+          `;
+          return;
+        }
+
+        const teacherList = document.createElement('div');
+        teacherList.className = 'teacher-list';
+
+        data.teachers.forEach(teacher => {
+          const card = document.createElement('div');
+          card.className = 'teacher-card';
+          card.id = `teacher-${teacher.id}`;
+
+          const createdDate = teacher.created_at ? new Date(teacher.created_at).toLocaleDateString() : 'N/A';
+
+          card.innerHTML = `
+            <div class="teacher-info">
+              <div class="teacher-name">
+                <i class="ri-user-line"></i> ${teacher.name}
+              </div>
+              <div class="teacher-email">
+                <i class="ri-mail-line"></i> ${teacher.email}
+              </div>
+              <div class="teacher-date">
+                Registered: ${createdDate}
+              </div>
+            </div>
+            <div class="teacher-actions">
+              <button class="btn btn-approve" onclick="approveTeacher('${teacher.id}')">
+                <i class="ri-check-line"></i> Approve
+              </button>
+              <button class="btn btn-reject" onclick="rejectTeacher('${teacher.id}')">
+                <i class="ri-close-line"></i> Reject
+              </button>
+            </div>
+          `;
+
+          teacherList.appendChild(card);
+        });
+
+        container.innerHTML = '';
+        container.appendChild(teacherList);
+
+      } catch (error) {
+        console.error('Error loading pending teachers:', error);
+        document.getElementById('teacherListContainer').innerHTML = `
+          <div class="empty-state">
+            <i class="ri-error-warning-line"></i>
+            <p>Error loading teachers. Please try again.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function approveTeacher(teacherId) {
+      if (!confirm('Are you sure you want to approve this teacher?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/teachers/approve/${teacherId}`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          // Remove the card with animation
+          const card = document.getElementById(`teacher-${teacherId}`);
+          if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(-20px)';
+            setTimeout(() => {
+              card.remove();
+              // Check if list is now empty
+              const container = document.getElementById('teacherListContainer');
+              if (container.querySelector('.teacher-list').children.length === 0) {
+                loadPendingTeachers();
+              }
+            }, 300);
+          }
+
+          // Refresh statistics
+          loadStatistics();
+
+          showToast('Teacher approved successfully!', 'success');
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Error approving teacher:', error);
+        showToast('Error approving teacher. Please try again.', 'error');
+      }
+    }
+
+    async function rejectTeacher(teacherId) {
+      if (!confirm('Are you sure you want to reject this teacher? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/teachers/reject/${teacherId}`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          // Remove the card with animation
+          const card = document.getElementById(`teacher-${teacherId}`);
+          if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(20px)';
+            setTimeout(() => {
+              card.remove();
+              // Check if list is now empty
+              const container = document.getElementById('teacherListContainer');
+              if (container.querySelector('.teacher-list').children.length === 0) {
+                loadPendingTeachers();
+              }
+            }, 300);
+          }
+
+          // Refresh statistics
+          loadStatistics();
+
+          showToast('Teacher rejected.', 'info');
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Error rejecting teacher:', error);
+        showToast('Error rejecting teacher. Please try again.', 'error');
+      }
+    }
+
+    // Load all users (teachers and students)
+    async function loadAllUsers() {
+      try {
+        const response = await fetch('/admin/users');
+        const data = await response.json();
+
+        if (!response.ok) {
+          return { teachers: [], students: [] };
+        }
+
+        return data;
+      } catch (error) {
+        console.error('Error loading users:', error);
+        return { teachers: [], students: [] };
+      }
+    }
+
+    // Load and display all teachers
+    async function loadAllTeachers() {
+      const container = document.getElementById('allTeachersContainer');
+      container.innerHTML = '<div class="loading"><i class="ri-loader-4-line"></i> Loading teachers...</div>';
+
+      const users = await loadAllUsers();
+
+      if (users.teachers.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-user-line"></i>
+            <p>No teachers found</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.teachers.map((teacher, index) => `
+              <tr id="teacher-row-${teacher.id}">
+                <td>${index + 1}</td>
+                <td>${teacher.name}</td>
+                <td>${teacher.email}</td>
+                <td>
+                  <span class="status-badge ${teacher.status === 'approved' ? 'status-approved' : 'status-pending'}">
+                    ${teacher.status === 'approved' ? 'Approved' : 'Pending'}
+                  </span>
+                </td>
+                <td>
+                  ${teacher.status === 'pending'
+                    ? `<button class="btn btn-approve" onclick="approveTeacher('${teacher.id}')">
+                        <i class="ri-check-line"></i> Approve
+                      </button>`
+                    : ''}
+                  <button class="btn-delete" onclick="deleteTeacher('${teacher.id}')">
+                    <i class="ri-delete-bin-line"></i> Remove
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // Load and display all students
+    async function loadAllStudents() {
+      const container = document.getElementById('allStudentsContainer');
+      container.innerHTML = '<div class="loading"><i class="ri-loader-4-line"></i> Loading students...</div>';
+
+      const users = await loadAllUsers();
+
+      if (users.students.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-user-line"></i>
+            <p>No students found</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.students.map((student, index) => `
+              <tr id="student-row-${student.id}">
+                <td>${index + 1}</td>
+                <td>${student.name}</td>
+                <td>${student.email}</td>
+                <td>
+                  <button class="btn-delete" onclick="deleteStudent('${student.id}')">
+                    <i class="ri-delete-bin-line"></i> Remove
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // Delete teacher
+    async function deleteTeacher(teacherId) {
+      const confirmed = await showConfirm(
+        'This will delete all their courses, sessions, and related data. This action cannot be undone.',
+        'Delete Teacher?'
+      );
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch(`/admin/teachers/${teacherId}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          const row = document.getElementById(`teacher-row-${teacherId}`);
+          if (row) {
+            row.style.opacity = '0';
+            setTimeout(() => {
+              row.remove();
+              loadStatistics();
+              loadPendingTeachers();
+            }, 300);
+          }
+          showToast(data.message, 'success');
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Error deleting teacher:', error);
+        showToast('Error deleting teacher. Please try again.', 'error');
+      }
+    }
+
+    // Delete student
+    async function deleteStudent(studentId) {
+      const confirmed = await showConfirm(
+        'This will delete all their reports and enrollment data. This action cannot be undone.',
+        'Delete Student?'
+      );
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch(`/admin/students/${studentId}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          const row = document.getElementById(`student-row-${studentId}`);
+          if (row) {
+            row.style.opacity = '0';
+            setTimeout(() => {
+              row.remove();
+              loadStatistics();
+            }, 300);
+          }
+          showToast(data.message, 'success');
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Error deleting student:', error);
+        showToast('Error deleting student. Please try again.', 'error');
+      }
+    }
+
+    // Switch tabs in User Management section
+    function switchUserTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      event.target.classList.add('active');
+
+      if (tab === 'teachers') {
+        document.getElementById('teachersTab').classList.add('active');
+        loadAllTeachers();
+      } else if (tab === 'students') {
+        document.getElementById('studentsTab').classList.add('active');
+        loadAllStudents();
+      }
+    }
+
+    // ==================== COURSE MANAGEMENT FUNCTIONS ====================
+
+    let approvedTeachers = [];
+
+    async function loadCourses() {
+      try {
+        const response = await fetch('/admin/courses');
+        const data = await response.json();
+
+        const container = document.getElementById('coursesContainer');
+
+        if (response.ok && data.courses && data.courses.length > 0) {
+          container.innerHTML = `
+            <table class="courses-table">
+              <thead>
+                <tr>
+                  <th>Course Code</th>
+                  <th>Course Name</th>
+                  <th>Teacher</th>
+                  <th># Students</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.courses.map(course => `
+                  <tr id="course-row-${course.id}">
+                    <td><strong>${course.course_code}</strong></td>
+                    <td>${course.course_name}</td>
+                    <td>${course.teacher_name}</td>
+                    <td>${course.student_count}</td>
+                    <td>
+                      <div class="course-actions">
+                        <button class="btn-view" onclick="viewCourseStudents('${course.id}', '${course.course_code}')">
+                          <i class="ri-group-line"></i> Students
+                        </button>
+                        <button class="btn-edit" onclick="editCourse('${course.id}')">
+                          <i class="ri-edit-line"></i> Edit
+                        </button>
+                        <button class="btn-delete" onclick="deleteCourse('${course.id}', '${course.course_code}')">
+                          <i class="ri-delete-bin-line"></i> Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-book-line"></i>
+              <p>No courses found. Add your first course to get started!</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading courses:', error);
+        document.getElementById('coursesContainer').innerHTML = `
+          <div class="empty-state">
+            <i class="ri-error-warning-line"></i>
+            <p>Error loading courses. Please refresh the page.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function loadApprovedTeachers() {
+      try {
+        const response = await fetch('/admin/teachers/approved');
+        const data = await response.json();
+
+        if (response.ok) {
+          approvedTeachers = data.teachers;
+          const select = document.getElementById('teacherSelect');
+          select.innerHTML = '<option value="">Select a teacher</option>';
+
+          data.teachers.forEach(teacher => {
+            const option = document.createElement('option');
+            option.value = teacher.id;
+            option.textContent = `${teacher.name} (${teacher.email})`;
+            select.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading teachers:', error);
+      }
+    }
+
+    function showAddCourseModal() {
+      loadApprovedTeachers();
+      document.getElementById('courseModalTitle').textContent = 'Add Course';
+      document.getElementById('courseId').value = '';
+      document.getElementById('courseCode').value = '';
+      document.getElementById('courseName').value = '';
+      document.getElementById('teacherSelect').value = '';
+      document.getElementById('courseModal').classList.add('show');
+    }
+
+    async function editCourse(courseId) {
+      try {
+        await loadApprovedTeachers();
+
+        const response = await fetch('/admin/courses');
+        const data = await response.json();
+
+        if (response.ok) {
+          const course = data.courses.find(c => c.id === courseId);
+          if (course) {
+            document.getElementById('courseModalTitle').textContent = 'Edit Course';
+            document.getElementById('courseId').value = course.id;
+            document.getElementById('courseCode').value = course.course_code;
+            document.getElementById('courseName').value = course.course_name;
+            document.getElementById('teacherSelect').value = course.teacher_id;
+            document.getElementById('courseModal').classList.add('show');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading course:', error);
+        showToast('Error loading course details', 'error');
+      }
+    }
+
+    function closeCourseModal() {
+      document.getElementById('courseModal').classList.remove('show');
+    }
+
+    async function saveCourse() {
+      const courseId = document.getElementById('courseId').value;
+      const courseCode = document.getElementById('courseCode').value.trim();
+      const courseName = document.getElementById('courseName').value.trim();
+      const teacherId = document.getElementById('teacherSelect').value;
+
+      if (!courseCode || !courseName || !teacherId) {
+        showToast('Please fill all required fields', 'error');
+        return;
+      }
+
+      try {
+        const isEdit = courseId !== '';
+        const url = isEdit ? `/admin/courses/${courseId}` : '/admin/courses/add';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            course_code: courseCode,
+            course_name: courseName,
+            teacher_id: teacherId
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showToast(data.message, 'success');
+          closeCourseModal();
+          await loadCourses();
+          await loadStatistics();
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Error saving course:', error);
+        showToast('Error saving course. Please try again.', 'error');
+      }
+    }
+
+    async function deleteCourse(courseId, courseCode) {
+      const confirmed = await showConfirm(
+        `This will permanently delete "${courseCode}" and all associated sessions, reports, and enrollments. This cannot be undone.`,
+        'Delete Course?'
+      );
+
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch(`/admin/courses/${courseId}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          const row = document.getElementById(`course-row-${courseId}`);
+          if (row) {
+            row.style.opacity = '0';
+            setTimeout(() => {
+              row.remove();
+              loadStatistics();
+              loadCourses();
+            }, 300);
+          }
+          showToast(data.message, 'success');
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Error deleting course:', error);
+        showToast('Error deleting course. Please try again.', 'error');
+      }
+    }
+
+    async function viewCourseStudents(courseId, courseCode) {
+      document.getElementById('studentsModalTitle').textContent = `Enrolled Students - ${courseCode}`;
+      document.getElementById('studentsModal').classList.add('show');
+      document.getElementById('studentsModalContent').innerHTML = `
+        <div class="loading">
+          <i class="ri-loader-4-line"></i> Loading students...
+        </div>
+      `;
+
+      try {
+        const response = await fetch(`/admin/courses/${courseId}/students`);
+        const data = await response.json();
+
+        if (response.ok) {
+          if (data.students && data.students.length > 0) {
+            document.getElementById('studentsModalContent').innerHTML = `
+              <table class="courses-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${data.students.map((student, index) => `
+                    <tr>
+                      <td>${index + 1}</td>
+                      <td>${student.name}</td>
+                      <td>${student.email}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `;
+          } else {
+            document.getElementById('studentsModalContent').innerHTML = `
+              <div class="empty-state">
+                <i class="ri-user-line"></i>
+                <p>No students enrolled in this course yet.</p>
+              </div>
+            `;
+          }
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Error loading students:', error);
+        document.getElementById('studentsModalContent').innerHTML = `
+          <div class="empty-state">
+            <i class="ri-error-warning-line"></i>
+            <p>Error loading students. Please try again.</p>
+          </div>
+        `;
+      }
+    }
+
+    function closeStudentsModal() {
+      document.getElementById('studentsModal').classList.remove('show');
+    }
+
+    // Close modals on click outside
+    document.getElementById('courseModal').addEventListener('click', function(e) {
+      if (e.target === this) closeCourseModal();
+    });
+    document.getElementById('studentsModal').addEventListener('click', function(e) {
+      if (e.target === this) closeStudentsModal();
+    });
+
+    // Initialize dashboard when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      loadUserInfo();
+      loadStatistics();
+      loadPendingTeachers();
+      loadAllTeachers();
+      loadCourses();
+    });
+
+    // Notification Modal Functions
+    function showNotification(message, type = 'info', title = '') {
+      const modal = document.getElementById('notificationModal');
+      const header = document.getElementById('notificationHeader');
+      const icon = document.getElementById('notificationIcon');
+      const titleEl = document.getElementById('notificationTitle');
+      const body = document.getElementById('notificationBody');
+      header.className = `notification-header ${type}`;
+      const icons = {
+        success: 'ri-checkbox-circle-line',
+        error: 'ri-error-warning-line',
+        warning: 'ri-alert-line',
+        info: 'ri-information-line'
+      };
+      icon.className = icons[type] || icons.info;
+      const titles = {
+        success: title || 'Success',
+        error: title || 'Error',
+        warning: title || 'Warning',
+        info: title || 'Information'
+      };
+      titleEl.textContent = titles[type] || title || 'Notification';
+      body.textContent = message;
+      modal.classList.add('show');
+    }
+
+    function closeNotification() {
+      document.getElementById('notificationModal').classList.remove('show');
+    }
+
+    function showToast(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = {
+        success: 'ri-checkbox-circle-fill',
+        error: 'ri-error-warning-fill',
+        warning: 'ri-alert-fill',
+        info: 'ri-information-fill'
+      };
+      const titles = { success: 'Success', error: 'Error', warning: 'Warning', info: 'Info' };
+      toast.innerHTML = `
+        <div class="toast-icon"><i class="${icons[type]}"></i></div>
+        <div class="toast-content">
+          <div class="toast-title">${titles[type]}</div>
+          <div class="toast-message">${message}</div>
+        </div>
+        <div class="toast-close" onclick="this.parentElement.remove()"><i class="ri-close-line"></i></div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    let confirmCallback = null;
+    function showConfirm(message, title = 'Confirm Action') {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmBody').textContent = message;
+        confirmCallback = resolve;
+        modal.classList.add('show');
+      });
+    }
+
+    function closeConfirm(result) {
+      document.getElementById('confirmModal').classList.remove('show');
+      if (confirmCallback) {
+        confirmCallback(result);
+        confirmCallback = null;
+      }
+    }
+
+    document.getElementById('notificationModal').addEventListener('click', function(e) {
+      if (e.target === this) closeNotification();
+    });
+    document.getElementById('confirmModal').addEventListener('click', function(e) {
+      if (e.target === this) closeConfirm(false);
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        if (document.getElementById('notificationModal').classList.contains('show')) closeNotification();
+        if (document.getElementById('confirmModal').classList.contains('show')) closeConfirm(false);
+      }
+    });
+  </script>
+</body>
+</html>

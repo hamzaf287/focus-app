@@ -1,0 +1,30 @@
+# Flask and Web Framework
+Flask==3.0.0
+flask-pymongo==2.3.0
+Werkzeug==3.0.1
+
+# Database
+pymongo==4.6.1
+
+# Authentication and Security
+bcrypt==4.1.2
+
+# Date and Time utilities
+python-dateutil==2.8.2
+
+# Environment variables (optional but recommended)
+python-dotenv==1.0.0
+
+# AI/ML Dependencies (for later integration)
+torch==2.1.2
+torchvision==0.16.2
+opencv-python==4.9.0.80
+
+# PDF Generation
+reportlab==4.0.9
+
+# Window Management
+pygetwindow==0.0.9
+
+# Additional utilities
+Pillow==10.2.0

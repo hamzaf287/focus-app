@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FocusCheck{% endblock %}</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <style>
+        /* Notification Modal Styles */
+        .notification-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .notification-modal.show {
+            display: flex;
+        }
+
+        .notification-content {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+            overflow: hidden;
+        }
+
+        .notification-header {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .notification-header.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-bottom: none;
+        }
+
+        .notification-header.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border-bottom: none;
+        }
+
+        .notification-header.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border-bottom: none;
+        }
+
+        .notification-header.info {
+            background: linear-gradient(135deg, #667eea 0%, #5568d3 100%);
+            color: white;
+            border-bottom: none;
+        }
+
+        .notification-icon {
+            font-size: 28px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .notification-header.success .notification-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .notification-header.error .notification-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .notification-header.warning .notification-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .notification-header.info .notification-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .notification-body {
+            padding: 24px;
+            color: #374151;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .notification-footer {
+            padding: 16px 24px;
+            background: #f9fafb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .notification-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .notification-btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .notification-btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .notification-btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .notification-btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 20px;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .toast.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .toast.info {
+            border-left: 4px solid #667eea;
+        }
+
+        .toast-icon {
+            font-size: 24px;
+        }
+
+        .toast.success .toast-icon {
+            color: #10b981;
+        }
+
+        .toast.error .toast-icon {
+            color: #ef4444;
+        }
+
+        .toast.warning .toast-icon {
+            color: #f59e0b;
+        }
+
+        .toast.info .toast-icon {
+            color: #667eea;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .toast-close {
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 18px;
+            transition: color 0.2s;
+        }
+
+        .toast-close:hover {
+            color: #374151;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="notification-modal">
+        <div class="notification-content">
+            <div id="notificationHeader" class="notification-header">
+                <div class="notification-icon">
+                    <i id="notificationIcon"></i>
+                </div>
+                <div id="notificationTitle" class="notification-title"></div>
+            </div>
+            <div id="notificationBody" class="notification-body"></div>
+            <div class="notification-footer">
+                <button class="notification-btn notification-btn-primary" onclick="closeNotification()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="notification-modal">
+        <div class="notification-content">
+            <div id="confirmHeader" class="notification-header warning">
+                <div class="notification-icon">
+                    <i class="ri-alert-line"></i>
+                </div>
+                <div id="confirmTitle" class="notification-title">Confirm Action</div>
+            </div>
+            <div id="confirmBody" class="notification-body"></div>
+            <div class="notification-footer">
+                <button class="notification-btn notification-btn-secondary" onclick="closeConfirm(false)">Cancel</button>
+                <button class="notification-btn notification-btn-primary" onclick="closeConfirm(true)" style="background: #ef4444;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    {% block content %}{% endblock %}
+
+    <script>
+        // Notification Modal Functions
+        function showNotification(message, type = 'info', title = '') {
+            const modal = document.getElementById('notificationModal');
+            const header = document.getElementById('notificationHeader');
+            const icon = document.getElementById('notificationIcon');
+            const titleEl = document.getElementById('notificationTitle');
+            const body = document.getElementById('notificationBody');
+
+            // Set type-specific styling
+            header.className = `notification-header ${type}`;
+
+            // Set icon based on type
+            const icons = {
+                success: 'ri-checkbox-circle-line',
+                error: 'ri-error-warning-line',
+                warning: 'ri-alert-line',
+                info: 'ri-information-line'
+            };
+            icon.className = icons[type] || icons.info;
+
+            // Set title
+            const titles = {
+                success: title || 'Success',
+                error: title || 'Error',
+                warning: title || 'Warning',
+                info: title || 'Information'
+            };
+            titleEl.textContent = titles[type] || title || 'Notification';
+
+            // Set message
+            body.textContent = message;
+
+            // Show modal
+            modal.classList.add('show');
+        }
+
+        function closeNotification() {
+            const modal = document.getElementById('notificationModal');
+            modal.classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('notificationModal');
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeNotification();
+                }
+            });
+
+            // Close on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('show')) {
+                    closeNotification();
+                }
+            });
+        });
+
+        // Toast Notification Functions
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            const icons = {
+                success: 'ri-checkbox-circle-fill',
+                error: 'ri-error-warning-fill',
+                warning: 'ri-alert-fill',
+                info: 'ri-information-fill'
+            };
+
+            const titles = {
+                success: 'Success',
+                error: 'Error',
+                warning: 'Warning',
+                info: 'Info'
+            };
+
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="${icons[type]}"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${titles[type]}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <div class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="ri-close-line"></i>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto remove after duration
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // Confirmation Modal Functions
+        let confirmCallback = null;
+
+        function showConfirm(message, title = 'Confirm Action') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                const titleEl = document.getElementById('confirmTitle');
+                const body = document.getElementById('confirmBody');
+
+                titleEl.textContent = title;
+                body.textContent = message;
+
+                confirmCallback = resolve;
+                modal.classList.add('show');
+            });
+        }
+
+        function closeConfirm(result) {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('show');
+            if (confirmCallback) {
+                confirmCallback(result);
+                confirmCallback = null;
+            }
+        }
+
+        // Override confirm() to use custom modal
+        const originalConfirm = window.confirm;
+        window.confirm = function(message) {
+            // For synchronous compatibility, we'll still use the promise but make it work
+            // This is a bit of a hack but maintains backward compatibility
+            let result = false;
+            showConfirm(message).then(r => result = r);
+
+            // For better UX, we actually want to return the promise
+            // But for backward compatibility with existing code using if(confirm())
+            // We need to handle it differently
+            return showConfirm(message);
+        };
+
+        // Better: Use showConfirm() directly for async/await pattern
+        // Example: if (await showConfirm('Are you sure?')) { ... }
+
+        // Legacy alert() replacement - automatically uses modals
+        const originalAlert = window.alert;
+        window.alert = function(message) {
+            // Detect type from message content
+            let type = 'info';
+            if (message.toLowerCase().includes('success') || message.toLowerCase().includes('approved') || message.toLowerCase().includes('completed')) {
+                type = 'success';
+            } else if (message.toLowerCase().includes('error') || message.toLowerCase().includes('failed')) {
+                type = 'error';
+            } else if (message.toLowerCase().includes('warning')) {
+                type = 'warning';
+            }
+
+            showNotification(message, type);
+        };
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

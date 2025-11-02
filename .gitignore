@@ -1,14 +1,18 @@
 # Video files
 static/videos/*.avi
+static/videos/*.mp4
 
 # Report files
 static/reports/*.txt
+static/reports/*.pdf
 
 # Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyc
+*.pyo
 
 # Virtual environment
 venv/
@@ -18,7 +22,22 @@ ENV/
 # IDE
 .vscode/
 .idea/
+.claude/
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Documentation and test files
+docs/
+test_api.py
+*_test.py
+*.backup*
+app_old.py
+
+# Unused templates
+templates/analytics.html
+templates/history.html
+
+# Cleanup scripts (optional - keep if you want)
+cleanup_project.py

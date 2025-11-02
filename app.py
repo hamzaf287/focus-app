@@ -1,49 +1,48 @@
+"""
+Focus Detection App - Main Application
+Backend foundation with Flask + MongoDB
+"""
+
+from flask import Flask, jsonify, render_template, session, redirect, url_for, Response
+from flask_pymongo import PyMongo
+from config import config
+import os
 import cv2
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.models as models
-from flask import Flask, render_template, Response, jsonify, request, session, redirect, url_for, send_file
-from functools import wraps
 import time
 import threading
-import pygetwindow as gw
-from reportlab.lib.pagesizes import letter, A4
+from datetime import datetime
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from io import BytesIO
-from datetime import datetime
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.enums import TA_CENTER
 
-# ---------------- Flask Setup ----------------
+# Initialize Flask app
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this-in-production'  # Change this to a random secret key
 
-# ---------------- Sample Users ----------------
-USERS = {
-    'student': 'focus123',
-    'admin': 'admin123',
-    'demo': 'demo123'
-}
+# Load configuration
+env = os.environ.get('FLASK_ENV', 'development')
+app.config.from_object(config[env])
 
-# ---------------- Model Definition ----------------
-class FocusModel(nn.Module):
-    def __init__(self):
-        super(FocusModel, self).__init__()
-        self.resnet = models.resnet18(weights=None)
-        num_features = self.resnet.fc.in_features
-        self.resnet.fc = nn.Linear(num_features, 2)
+# Initialize MongoDB
+mongo = PyMongo(app)
+db = mongo.db
 
-    def forward(self, x):
-        return self.resnet(x)
+# Initialize configuration (create folders, etc.)
+config[env].init_app(app)
 
-# ---------------- Load Model ----------------
+
+# ==================== AI Model Setup ====================
 MODEL_PATH = "focus_binary_classifier_finetuned.pth"
 device = torch.device("cpu")
 
-# Load the model directly as ResNet18 with modified final layer
+# Load ResNet18 model
 model = models.resnet18(weights=None)
 num_features = model.fc.in_features
 model.fc = nn.Linear(num_features, 2)
@@ -51,40 +50,12 @@ model.fc = nn.Linear(num_features, 2)
 try:
     model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
     model.eval()
-    print("✅ Model loaded successfully.")
+    print("AI Model loaded successfully.")
 except Exception as e:
-    print(f"⚠️ Could not load model: {e}")
+    print(f"Could not load model: {e}")
     model = None
 
-# ---------------- Globals ----------------
-camera = None
-is_running = False
-focused_frames = 0
-distracted_frames = 0
-total_frames = 0
-session_start_time = None
-tab_switches = []
-last_report_data = None  # Store last session data for PDF generation
-current_course = None  # Store selected course for the session
-session_history = {}  # Store all session reports per user (username -> list of reports)
-
-# ---------------- Screen Activity Monitor ----------------
-def monitor_screen_activity():
-    global tab_switches
-    last_active = ""
-    while is_running:
-        try:
-            active_window = gw.getActiveWindow()
-            if active_window:
-                title = active_window.title
-                if title != last_active:
-                    last_active = title
-                    tab_switches.append((time.strftime("%H:%M:%S"), title))
-            time.sleep(1)
-        except Exception:
-            continue
-
-# ---------------- Frame Analysis ----------------
+# Image transformation for model input
 transform = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize((224, 224)),
@@ -93,7 +64,68 @@ transform = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
+# Focus detection globals (per-session storage)
+active_sessions = {}  # session_id -> {camera, is_running, focused_frames, distracted_frames, total_frames, start_time}
+
+
+# ==================== Register Blueprints ====================
+from routes import auth_routes, admin_routes, teacher_routes, student_routes
+
+# Initialize routes with database
+auth_routes.init_routes(db)
+admin_routes.init_routes(db)
+teacher_routes.init_routes(db)
+student_routes.init_routes(db)
+
+# Register blueprints
+app.register_blueprint(auth_routes.auth_bp)
+app.register_blueprint(admin_routes.admin_bp)
+app.register_blueprint(teacher_routes.teacher_bp)
+app.register_blueprint(student_routes.student_bp)
+
+
+# ==================== Template Routes ====================
+@app.route('/')
+def home():
+    """Home route - redirect to login or dashboard"""
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login_page'))
+
+
+@app.route('/login')
+def login_page():
+    """Login page"""
+    return render_template('login.html')
+
+
+@app.route('/register')
+def register_page():
+    """Register page"""
+    return render_template('register.html')
+
+
+@app.route('/dashboard')
+def dashboard():
+    """Dashboard - route to correct dashboard based on role"""
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
+
+    role = session.get('user_role')
+
+    if role == 'student':
+        return render_template('student_dashboard.html')
+    elif role == 'teacher':
+        return render_template('teacher_dashboard.html')
+    elif role == 'admin':
+        return render_template('admin_dashboard.html')
+    else:
+        return redirect(url_for('login_page'))
+
+
+# ==================== Focus Detection Functions ====================
 def analyze_frame(frame):
+    """Analyze a video frame and return focus status"""
     if model is None:
         return "Unknown"
 
@@ -102,459 +134,491 @@ def analyze_frame(frame):
     with torch.no_grad():
         outputs = model(img)
         probs = torch.softmax(outputs, dim=1)[0]
-        print("🔍 Model output probabilities:", probs.tolist())  # Debug line
-
-        # Adjust based on your model’s output ordering
         return "Focused" if probs[1] > probs[0] else "Distracted"
 
-# ---------------- Video Generator ----------------
-def generate_frames():
-    global focused_frames, distracted_frames, total_frames
-    while is_running:
+
+def generate_frames(session_id):
+    """Generate video frames with focus detection"""
+    session_data = active_sessions.get(session_id)
+    if not session_data:
+        return
+
+    while session_data['is_running']:
+        camera = session_data['camera']
         if camera is None:
             break
+
         success, frame = camera.read()
         if not success:
-            print("⚠️ Failed to read frame from camera")
             break
 
         status = analyze_frame(frame)
-        total_frames += 1
+        session_data['total_frames'] += 1
+
         if status == "Focused":
-            focused_frames += 1
+            session_data['focused_frames'] += 1
         elif status == "Distracted":
-            distracted_frames += 1
+            session_data['distracted_frames'] += 1
 
         # Overlay prediction text on video
+        color = (0, 255, 0) if status == "Focused" else (0, 0, 255)
         cv2.putText(frame, f"Status: {status}", (20, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0) if status == "Focused" else (0, 0, 255), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
         _, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
+        frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-# ---------------- Authentication Decorator ----------------
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
-# ---------------- Routes ----------------
-@app.route('/')
-def index():
-    if 'username' in session:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+# ==================== Focus Detection Routes ====================
+@app.route('/session/<session_id>/join')
+def join_focus_session(session_id):
+    """Render focus detection page for a session"""
+    if 'user_id' not in session:
+        return redirect(url_for('login_page'))
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'GET':
-        return render_template('login.html')
+    return render_template('focus_session.html', session_id=session_id)
 
-    # POST request - handle login
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
 
-    if username in USERS and USERS[username] == password:
-        session['username'] = username
-        return jsonify({'status': 'success', 'message': 'Login successful'}), 200
-    else:
-        return jsonify({'status': 'error', 'message': 'Invalid username or password'}), 401
+@app.route('/session/<session_id>/start', methods=['POST'])
+def start_focus_detection(session_id):
+    """Start focus detection for a session"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Authentication required"}), 401
 
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('login'))
+    # Check if session already running
+    if session_id in active_sessions:
+        return jsonify({"error": "Session already active"}), 409
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    courses = ["CSCS460ASP2024", "COMP451BSP2024", "COMP301ASP2024"]
-    return render_template('index.html', courses=courses, username=session.get('username'))
-
-@app.route('/history')
-@login_required
-def history():
-    return render_template('history.html', username=session.get('username'))
-
-@app.route('/analytics')
-@login_required
-def analytics():
-    return render_template('analytics.html', username=session.get('username'))
-
-@app.route('/get_session_history')
-@login_required
-def get_session_history():
-    """Return session history for the current user"""
-    username = session.get('username', 'User')
-    user_sessions = session_history.get(username, [])
-    # Return sessions in reverse order (newest first)
-    return jsonify({"sessions": list(reversed(user_sessions))})
-
-@app.route('/start', methods=['POST'])
-@login_required
-def start_focus():
-    global is_running, focused_frames, distracted_frames, total_frames, session_start_time, tab_switches, camera, current_course
-
-    # Get selected course from request
-    data = request.get_json() if request.is_json else {}
-    current_course = data.get('course', 'Not specified')
-
-    # Initialize camera when session starts
+    # Initialize camera
     camera = cv2.VideoCapture(0)
     if not camera.isOpened():
-        return jsonify({"status": "Error: Could not access camera"}), 500
+        return jsonify({"error": "Could not access camera"}), 500
 
-    is_running = True
-    focused_frames = distracted_frames = total_frames = 0
-    tab_switches = []
-    session_start_time = time.time()
-
-    threading.Thread(target=monitor_screen_activity, daemon=True).start()
-    return jsonify({"status": "Session started", "course": current_course})
-
-@app.route('/stop', methods=['POST'])
-@login_required
-def stop_focus():
-    global is_running, camera, last_report_data, session_history
-    is_running = False
-
-    # Release camera when session stops
-    if camera is not None:
-        camera.release()
-        camera = None
-    duration = time.time() - session_start_time
-    focus_percentage = (focused_frames / total_frames * 100) if total_frames else 0
-
-    report = (
-        "===== Focus Report =====\n"
-        f"Course: {current_course or 'Not specified'}\n"
-        f"Date: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
-        f"Session Duration: {int(duration)} seconds\n"
-        f"Total Frames: {total_frames}\n"
-        f"Focused: {focused_frames}\n"
-        f"Distracted: {distracted_frames}\n"
-        f"Focus %: {focus_percentage:.2f}%\n"
-        "\n--- Tab Switches ---\n"
-    )
-
-    if tab_switches:
-        for t, title in tab_switches:
-            report += f"[{t}] {title}\n"
-    else:
-        report += "No tab switches detected.\n"
-
-    # Store report data for PDF generation
-    report_data = {
-        "id": int(time.time() * 1000),  # Unique ID using timestamp
-        "username": session.get('username', 'User'),
-        "course": current_course or 'Not specified',
-        "date": time.strftime('%Y-%m-%d %H:%M:%S'),
-        "duration": int(duration),
-        "total_frames": total_frames,
-        "focused_frames": focused_frames,
-        "distracted_frames": distracted_frames,
-        "focus_percentage": round(focus_percentage, 2),
-        "tab_switches": list(tab_switches)  # Copy the list
+    # Store session data
+    active_sessions[session_id] = {
+        'camera': camera,
+        'is_running': True,
+        'focused_frames': 0,
+        'distracted_frames': 0,
+        'total_frames': 0,
+        'start_time': time.time(),
+        'student_id': session['user_id']
     }
 
-    last_report_data = report_data
+    return jsonify({"status": "Focus detection started", "session_id": session_id})
 
-    # Add to session history
-    username = session.get('username', 'User')
-    if username not in session_history:
-        session_history[username] = []
-    session_history[username].append(report_data)
 
-    print(report)
+@app.route('/session/<session_id>/video_feed')
+def video_feed(session_id):
+    """Video streaming route"""
+    return Response(generate_frames(session_id),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/session/<session_id>/stop', methods=['POST'])
+def stop_focus_detection(session_id):
+    """Stop focus detection and save report"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Authentication required"}), 401
+
+    session_data = active_sessions.get(session_id)
+    if not session_data:
+        return jsonify({"error": "Session not found"}), 404
+
+    # Stop the session
+    session_data['is_running'] = False
+    if session_data['camera']:
+        session_data['camera'].release()
+
+    # Calculate statistics
+    duration = int(time.time() - session_data['start_time'])
+    total_frames = session_data['total_frames']
+    focused_frames = session_data['focused_frames']
+    distracted_frames = session_data['distracted_frames']
+    focus_percentage = (focused_frames / total_frames * 100) if total_frames else 0
+
+    # Get session and course info from database
+    from models.session_model import Session
+    from models.course_model import Course
+    from models.report_model import FocusReport
+
+    session_model = Session(db)
+    course_model = Course(db)
+    report_model = FocusReport(db)
+
+    session_obj = session_model.find_by_id(session_id)
+    if session_obj:
+        course = course_model.find_by_id(session_obj['course_id'])
+
+        # Save report to database
+        report = report_model.create_report(
+            student_id=session['user_id'],
+            course_id=session_obj['course_id'],
+            session_id=session_id,
+            focus_percentage=focus_percentage,
+            focused_frames=focused_frames,
+            distracted_frames=distracted_frames,
+            total_frames=total_frames,
+            duration=duration
+        )
+
+    # Clean up
+    del active_sessions[session_id]
+
     return jsonify({
         "status": "Session stopped",
-        "report": report,
-        "stats": {
+        "statistics": {
             "focus_percentage": round(focus_percentage, 2),
             "total_frames": total_frames,
             "focused_frames": focused_frames,
             "distracted_frames": distracted_frames,
-            "duration": int(duration)
+            "duration": duration
         }
     })
 
-@app.route('/video_feed')
-@login_required
-def video_feed():
-    return Response(generate_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/live_stats')
-@login_required
-def live_stats():
-    """Return current session stats for real-time updates"""
-    focus_percentage = (focused_frames / total_frames * 100) if total_frames else 0
+# ==================== Report Routes ====================
+@app.route('/reports/student/<student_id>')
+def get_student_reports(student_id):
+    """Get all reports for a student with course and session details"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Authentication required"}), 401
+
+    # Ensure user can only access their own reports (unless admin)
+    if session['user_id'] != student_id and session.get('user_role') != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    from models.report_model import FocusReport
+    from models.course_model import Course
+    from models.session_model import Session
+    from models.user_model import User
+
+    report_model = FocusReport(db)
+    course_model = Course(db)
+    session_model = Session(db)
+    user_model = User(db)
+
+    # Get all reports for student
+    reports = report_model.get_reports_by_student(student_id)
+
+    # Enrich reports with course and session details
+    enriched_reports = []
+    for report in reports:
+        course = course_model.find_by_id(str(report['course_id']))
+        session_obj = session_model.find_by_id(str(report['session_id']))
+
+        enriched_reports.append({
+            'id': str(report['_id']),
+            'focus_percentage': report['focus_percentage'],
+            'focused_frames': report['focused_frames'],
+            'distracted_frames': report['distracted_frames'],
+            'total_frames': report['total_frames'],
+            'duration': report['duration'],
+            'created_at': report['created_at'].isoformat(),
+            'report_path': report.get('report_path'),
+            'course': {
+                'id': str(course['_id']),
+                'course_code': course['course_code'],
+                'course_name': course['course_name']
+            } if course else None,
+            'session': {
+                'id': str(session_obj['_id']),
+                'session_name': session_obj['session_name']
+            } if session_obj else None
+        })
+
+    return jsonify({"reports": enriched_reports})
+
+
+@app.route('/reports/teacher/<teacher_id>')
+def get_teacher_reports(teacher_id):
+    """Get all session reports for a teacher's courses"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Authentication required"}), 401
+
+    # Ensure user can only access their own reports (unless admin)
+    if session['user_id'] != teacher_id and session.get('user_role') != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    from models.course_model import Course
+    from models.session_model import Session as SessionModel
+    from models.report_model import FocusReport
+    from models.user_model import User
+
+    course_model = Course(db)
+    session_model = SessionModel(db)
+    report_model = FocusReport(db)
+    user_model = User(db)
+
+    # Get all courses taught by this teacher
+    courses = course_model.get_courses_by_teacher(teacher_id)
+
+    all_reports = []
+    for course in courses:
+        # Get all sessions for this course
+        sessions = session_model.get_sessions_by_course(str(course['_id']))
+
+        for session_obj in sessions:
+            # Get all reports for this session
+            reports = report_model.get_reports_by_session(str(session_obj['_id']))
+
+            for report in reports:
+                student = user_model.find_by_id(str(report['student_id']))
+
+                all_reports.append({
+                    'id': str(report['_id']),
+                    'focus_percentage': report['focus_percentage'],
+                    'focused_frames': report['focused_frames'],
+                    'distracted_frames': report['distracted_frames'],
+                    'total_frames': report['total_frames'],
+                    'duration': report['duration'],
+                    'created_at': report['created_at'].isoformat(),
+                    'report_path': report.get('report_path'),
+                    'course': {
+                        'id': str(course['_id']),
+                        'course_code': course['course_code'],
+                        'course_name': course['course_name']
+                    },
+                    'session': {
+                        'id': str(session_obj['_id']),
+                        'session_name': session_obj['session_name']
+                    },
+                    'student': {
+                        'id': str(student['_id']),
+                        'name': student['name'],
+                        'email': student['email']
+                    } if student else None
+                })
+
+    # Sort by created_at descending
+    all_reports.sort(key=lambda x: x['created_at'], reverse=True)
+
+    return jsonify({"reports": all_reports})
+
+
+@app.route('/reports/<report_id>/generate-pdf', methods=['POST'])
+def generate_pdf_report(report_id):
+    """Generate PDF report for a specific report ID"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Authentication required"}), 401
+
+    from models.report_model import FocusReport
+    from models.course_model import Course
+    from models.session_model import Session as SessionModel
+    from models.user_model import User
+
+    report_model = FocusReport(db)
+    course_model = Course(db)
+    session_model = SessionModel(db)
+    user_model = User(db)
+
+    # Get report
+    report = report_model.find_by_id(report_id)
+    if not report:
+        return jsonify({"error": "Report not found"}), 404
+
+    # Get related data
+    student = user_model.find_by_id(str(report['student_id']))
+    course = course_model.find_by_id(str(report['course_id']))
+    session_obj = session_model.find_by_id(str(report['session_id']))
+
+    if not student or not course or not session_obj:
+        return jsonify({"error": "Related data not found"}), 404
+
+    # Generate PDF
+    pdf_filename = f"report_{report_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    pdf_path = os.path.join(app.config['REPORTS_FOLDER'], pdf_filename)
+
+    # Ensure reports directory exists
+    os.makedirs(app.config['REPORTS_FOLDER'], exist_ok=True)
+
+    # Create PDF document
+    doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+    story = []
+    styles = getSampleStyleSheet()
+
+    # Add custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor('#667eea'),
+        spaceAfter=30,
+        alignment=TA_CENTER
+    )
+
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=16,
+        textColor=colors.HexColor('#1e293b'),
+        spaceAfter=12
+    )
+
+    # Title
+    story.append(Paragraph("Focus Detection Report", title_style))
+    story.append(Spacer(1, 0.3*inch))
+
+    # Student Information
+    story.append(Paragraph("Student Information", heading_style))
+    student_data = [
+        ['Student Name:', student['name']],
+        ['Email:', student['email']],
+        ['Report Date:', report['created_at'].strftime('%Y-%m-%d %H:%M:%S')]
+    ]
+    student_table = Table(student_data, colWidths=[2*inch, 4*inch])
+    student_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0'))
+    ]))
+    story.append(student_table)
+    story.append(Spacer(1, 0.3*inch))
+
+    # Session Information
+    story.append(Paragraph("Session Information", heading_style))
+    session_data = [
+        ['Course:', f"{course['course_code']} - {course['course_name']}"],
+        ['Session:', session_obj['session_name']],
+        ['Duration:', f"{report['duration'] // 60} min {report['duration'] % 60} sec"]
+    ]
+    session_table = Table(session_data, colWidths=[2*inch, 4*inch])
+    session_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0'))
+    ]))
+    story.append(session_table)
+    story.append(Spacer(1, 0.3*inch))
+
+    # Focus Statistics
+    story.append(Paragraph("Focus Statistics", heading_style))
+
+    # Determine focus grade
+    focus_pct = report['focus_percentage']
+    if focus_pct >= 80:
+        grade = "Excellent"
+        grade_color = colors.HexColor('#10b981')
+    elif focus_pct >= 60:
+        grade = "Good"
+        grade_color = colors.HexColor('#f59e0b')
+    else:
+        grade = "Needs Improvement"
+        grade_color = colors.HexColor('#ef4444')
+
+    stats_data = [
+        ['Focus Percentage:', f"{focus_pct}%", grade],
+        ['Focused Frames:', str(report['focused_frames']), ''],
+        ['Distracted Frames:', str(report['distracted_frames']), ''],
+        ['Total Frames Analyzed:', str(report['total_frames']), '']
+    ]
+    stats_table = Table(stats_data, colWidths=[2.5*inch, 1.5*inch, 2*inch])
+    stats_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('TEXTCOLOR', (2, 0), (2, 0), grade_color),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0'))
+    ]))
+    story.append(stats_table)
+    story.append(Spacer(1, 0.5*inch))
+
+    # Footer
+    footer_text = f"Generated by FocusCheck | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.grey,
+        alignment=TA_CENTER
+    )
+    story.append(Paragraph(footer_text, footer_style))
+
+    # Build PDF
+    doc.build(story)
+
+    # Update report with PDF path
+    relative_path = f"/static/reports/{pdf_filename}"
+    report_model.update_report_path(report_id, relative_path)
+
     return jsonify({
-        "focus_percentage": round(focus_percentage, 2),
-        "total_frames": total_frames,
-        "focused_frames": focused_frames,
-        "distracted_frames": distracted_frames,
-        "is_running": is_running
+        "status": "PDF generated successfully",
+        "pdf_url": relative_path,
+        "filename": pdf_filename
     })
 
-@app.route('/download_report_pdf')
-@login_required
-def download_report_pdf():
-    """Generate and download focus report as PDF"""
-    if last_report_data is None:
-        return jsonify({"error": "No report data available"}), 404
 
-    # Create PDF in memory
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    story = []
-    styles = getSampleStyleSheet()
+@app.route('/health')
+def health_check():
+    """Health check endpoint"""
+    try:
+        # Test database connection
+        db.command('ping')
+        db_status = "Connected"
+    except Exception as e:
+        db_status = f"Disconnected: {str(e)}"
 
-    # Custom styles
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        textColor=colors.HexColor('#667eea'),
-        spaceAfter=30,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold'
-    )
+    return jsonify({
+        "status": "running",
+        "database": db_status
+    }), 200
 
-    heading_style = ParagraphStyle(
-        'CustomHeading',
-        parent=styles['Heading2'],
-        fontSize=16,
-        textColor=colors.HexColor('#333333'),
-        spaceAfter=12,
-        spaceBefore=12,
-        fontName='Helvetica-Bold'
-    )
 
-    # Title
-    title = Paragraph("FOCUS CHECK - Session Report", title_style)
-    story.append(title)
-    story.append(Spacer(1, 0.3 * inch))
+# ==================== Error Handlers ====================
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors"""
+    return jsonify({"error": "Resource not found"}), 404
 
-    # User info
-    user_info = f"<b>Student:</b> {last_report_data['username']}<br/><b>Course:</b> {last_report_data['course']}<br/><b>Date:</b> {last_report_data['date']}"
-    story.append(Paragraph(user_info, styles['Normal']))
-    story.append(Spacer(1, 0.3 * inch))
 
-    # Session Summary
-    story.append(Paragraph("Session Summary", heading_style))
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors"""
+    return jsonify({"error": "Internal server error"}), 500
 
-    # Stats table
-    stats_data = [
-        ['Metric', 'Value'],
-        ['Course', last_report_data['course']],
-        ['Session Duration', f"{last_report_data['duration']} seconds"],
-        ['Total Frames Analyzed', str(last_report_data['total_frames'])],
-        ['Focused Frames', str(last_report_data['focused_frames'])],
-        ['Distracted Frames', str(last_report_data['distracted_frames'])],
-        ['Focus Percentage', f"{last_report_data['focus_percentage']}%"]
-    ]
 
-    stats_table = Table(stats_data, colWidths=[3*inch, 3*inch])
-    stats_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
-        ('PADDING', (0, 0), (-1, -1), 8),
-    ]))
+@app.errorhandler(403)
+def forbidden(error):
+    """Handle 403 errors"""
+    return jsonify({"error": "Forbidden"}), 403
 
-    story.append(stats_table)
-    story.append(Spacer(1, 0.4 * inch))
 
-    # Tab Switches
-    story.append(Paragraph("Tab/Window Activity", heading_style))
+@app.errorhandler(401)
+def unauthorized(error):
+    """Handle 401 errors"""
+    return jsonify({"error": "Unauthorized"}), 401
 
-    if last_report_data['tab_switches']:
-        tab_data = [['Time', 'Window/Tab Title']]
-        for t, title in last_report_data['tab_switches']:
-            tab_data.append([t, title])
 
-        tab_table = Table(tab_data, colWidths=[1.5*inch, 4.5*inch])
-        tab_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#764ba2')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('PADDING', (0, 0), (-1, -1), 6),
-        ]))
-        story.append(tab_table)
-    else:
-        story.append(Paragraph("No tab switches detected during this session.", styles['Normal']))
-
-    # Footer
-    story.append(Spacer(1, 0.5 * inch))
-    footer_text = f"<i>Generated by Focus Check on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i>"
-    story.append(Paragraph(footer_text, styles['Normal']))
-
-    # Build PDF
-    doc.build(story)
-    buffer.seek(0)
-
-    # Generate filename
-    filename = f"focus_report_{last_report_data['username']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name=filename,
-        mimetype='application/pdf'
-    )
-
-@app.route('/download_session_pdf/<int:session_id>')
-@login_required
-def download_session_pdf(session_id):
-    """Generate and download PDF for a specific session from history"""
-    username = session.get('username', 'User')
-    user_sessions = session_history.get(username, [])
-
-    # Find the session by ID
-    report_data = None
-    for s in user_sessions:
-        if s['id'] == session_id:
-            report_data = s
-            break
-
-    if report_data is None:
-        return jsonify({"error": "Session not found"}), 404
-
-    # Create PDF in memory (reuse same PDF generation logic)
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    story = []
-    styles = getSampleStyleSheet()
-
-    # Custom styles
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        textColor=colors.HexColor('#667eea'),
-        spaceAfter=30,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold'
-    )
-
-    heading_style = ParagraphStyle(
-        'CustomHeading',
-        parent=styles['Heading2'],
-        fontSize=16,
-        textColor=colors.HexColor('#333333'),
-        spaceAfter=12,
-        spaceBefore=12,
-        fontName='Helvetica-Bold'
-    )
-
-    # Title
-    title = Paragraph("FOCUS CHECK - Session Report", title_style)
-    story.append(title)
-    story.append(Spacer(1, 0.3 * inch))
-
-    # User info
-    user_info = f"<b>Student:</b> {report_data['username']}<br/><b>Course:</b> {report_data['course']}<br/><b>Date:</b> {report_data['date']}"
-    story.append(Paragraph(user_info, styles['Normal']))
-    story.append(Spacer(1, 0.3 * inch))
-
-    # Session Summary
-    story.append(Paragraph("Session Summary", heading_style))
-
-    # Stats table
-    stats_data = [
-        ['Metric', 'Value'],
-        ['Course', report_data['course']],
-        ['Session Duration', f"{report_data['duration']} seconds"],
-        ['Total Frames Analyzed', str(report_data['total_frames'])],
-        ['Focused Frames', str(report_data['focused_frames'])],
-        ['Distracted Frames', str(report_data['distracted_frames'])],
-        ['Focus Percentage', f"{report_data['focus_percentage']}%"]
-    ]
-
-    stats_table = Table(stats_data, colWidths=[3*inch, 3*inch])
-    stats_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
-        ('PADDING', (0, 0), (-1, -1), 8),
-    ]))
-
-    story.append(stats_table)
-    story.append(Spacer(1, 0.4 * inch))
-
-    # Tab Switches
-    story.append(Paragraph("Tab/Window Activity", heading_style))
-
-    if report_data['tab_switches']:
-        tab_data = [['Time', 'Window/Tab Title']]
-        for t, title in report_data['tab_switches']:
-            tab_data.append([t, title])
-
-        tab_table = Table(tab_data, colWidths=[1.5*inch, 4.5*inch])
-        tab_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#764ba2')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('PADDING', (0, 0), (-1, -1), 6),
-        ]))
-        story.append(tab_table)
-    else:
-        story.append(Paragraph("No tab switches detected during this session.", styles['Normal']))
-
-    # Footer
-    story.append(Spacer(1, 0.5 * inch))
-    footer_text = f"<i>Generated by Focus Check on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i>"
-    story.append(Paragraph(footer_text, styles['Normal']))
-
-    # Build PDF
-    doc.build(story)
-    buffer.seek(0)
-
-    # Generate filename
-    filename = f"focus_report_{report_data['username']}_{report_data['course']}_{session_id}.pdf"
-
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name=filename,
-        mimetype='application/pdf'
-    )
-
-# ---------------- Main ----------------
+# ==================== Run App ====================
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV', 'development') == 'development'
+
+    print("\n" + "="*50)
+    print("Focus Detection App Starting...")
+    print(f"Environment: {env}")
+    print(f"Port: {port}")
+    print(f"Debug Mode: {debug}")
+    print(f"MongoDB URI: {app.config['MONGO_URI']}")
+    print("="*50 + "\n")
+
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=debug
+    )

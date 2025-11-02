@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard - FocusCheck</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .navbar h1 { font-size: 24px; font-weight: 700; }
+    .navbar-right { display: flex; align-items: center; gap: 20px; }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,0.3); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      color: #1e293b;
+      margin-bottom: 20px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .tab {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      transition: all 0.3s;
+    }
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .course-card {
+      border: 2px solid #667eea;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .course-code {
+      font-size: 12px;
+      color: #667eea;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .course-name {
+      font-size: 16px;
+      color: #1e293b;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .course-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: #64748b;
+    }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+    .btn-success:hover {
+      background: #059669;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      color: #1e293b;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .create-session-form {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .sessions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .session-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+    .session-item:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+    .session-info {
+      flex: 1;
+    }
+    .session-name {
+      font-size: 16px;
+      color: #1e293b;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .session-details {
+      font-size: 12px;
+      color: #64748b;
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .session-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-active {
+      background: #10b981;
+      color: white;
+      animation: pulse 2s infinite;
+    }
+    .status-completed {
+      background: #94a3b8;
+      color: white;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+    .session-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .error-message {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .error-message.show {
+      display: block;
+    }
+    .success-message {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .success-message.show {
+      display: block;
+    }
+    .enrollment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .enrollment-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s;
+    }
+    .enrollment-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    }
+    .enrollment-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .enrollment-student {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 16px;
+    }
+    .enrollment-course {
+      color: #667eea;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .enrollment-date {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    .enrollment-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-approve {
+      background: #10b981;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-approve:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+    .btn-reject {
+      background: #ef4444;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-reject:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .modal-header h3 {
+      font-size: 20px;
+      color: #1e293b;
+      margin: 0;
+    }
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.3s;
+    }
+    .close-modal:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+    .students-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .students-table th {
+      background: #f8fafc;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #64748b;
+      font-size: 13px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .students-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+      font-size: 14px;
+    }
+    .students-table tr:hover {
+      background: #f8fafc;
+    }
+
+    /* Notification Modal Styles */
+    .notification-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    .notification-modal.show { display: flex; }
+    .notification-content {
+      background: white;
+      border-radius: 12px;
+      padding: 0;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      animation: slideIn 0.3s ease-out;
+      overflow: hidden;
+    }
+    .notification-header {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .notification-header.success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border-bottom: none;
+    }
+    .notification-header.error {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      border-bottom: none;
+    }
+    .notification-header.warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+      border-bottom: none;
+    }
+    .notification-header.info {
+      background: linear-gradient(135deg, #667eea 0%, #5568d3 100%);
+      color: white;
+      border-bottom: none;
+    }
+    .notification-icon {
+      font-size: 28px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .notification-title { font-size: 18px; font-weight: 600; flex: 1; }
+    .notification-body {
+      padding: 24px;
+      color: #374151;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    .notification-footer {
+      padding: 16px 24px;
+      background: #f9fafb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .notification-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .notification-btn-primary { background: #667eea; color: white; }
+    .notification-btn-primary:hover { background: #5568d3; transform: translateY(-1px); }
+    .notification-btn-secondary { background: #e5e7eb; color: #374151; }
+    .notification-btn-secondary:hover { background: #d1d5db; }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Toast Notification Styles */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10001;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: white;
+      border-radius: 8px;
+      padding: 16px 20px;
+      min-width: 300px;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideInRight 0.3s ease-out;
+    }
+    .toast.success { border-left: 4px solid #10b981; }
+    .toast.error { border-left: 4px solid #ef4444; }
+    .toast.warning { border-left: 4px solid #f59e0b; }
+    .toast.info { border-left: 4px solid #667eea; }
+    .toast-icon { font-size: 24px; }
+    .toast.success .toast-icon { color: #10b981; }
+    .toast.error .toast-icon { color: #ef4444; }
+    .toast.warning .toast-icon { color: #f59e0b; }
+    .toast.info .toast-icon { color: #667eea; }
+    .toast-content { flex: 1; }
+    .toast-title { font-weight: 600; color: #111827; margin-bottom: 2px; }
+    .toast-message { font-size: 14px; color: #6b7280; }
+    .toast-close {
+      cursor: pointer;
+      color: #9ca3af;
+      font-size: 18px;
+      transition: color 0.2s;
+    }
+    .toast-close:hover { color: #374151; }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(100px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideOutRight {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(100px); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <h1><i class="ri-focus-3-line"></i> FocusCheck - Teacher</h1>
+    <div class="navbar-right">
+      <div class="user-info">
+        <i class="ri-user-line"></i>
+        <span id="userName">Loading...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <i class="ri-logout-box-line"></i> Logout
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="section">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('courses')">My Courses</button>
+        <button class="tab" onclick="switchTab('sessions')">Sessions</button>
+        <button class="tab" onclick="switchTab('enrollments')">Enrollment Requests</button>
+        <button class="tab" onclick="switchTab('create')">Create Session</button>
+        <button class="tab" onclick="switchTab('reports')">Reports</button>
+      </div>
+
+      <div id="coursesTab" class="tab-content active">
+        <h2><i class="ri-book-line"></i> My Courses</h2>
+        <div id="coursesList" class="loading">
+          <i class="ri-loader-4-line ri-spin"></i> Loading courses...
+        </div>
+      </div>
+
+      <div id="sessionsTab" class="tab-content">
+        <h2><i class="ri-calendar-line"></i> My Sessions</h2>
+        <div id="sessionsList" class="loading">
+          <i class="ri-loader-4-line ri-spin"></i> Loading sessions...
+        </div>
+      </div>
+
+      <div id="enrollmentsTab" class="tab-content">
+        <h2><i class="ri-user-add-line"></i> Pending Enrollment Requests</h2>
+        <div id="enrollmentsList" class="loading">
+          <i class="ri-loader-4-line ri-spin"></i> Loading enrollment requests...
+        </div>
+      </div>
+
+      <div id="createTab" class="tab-content">
+        <h2><i class="ri-add-circle-line"></i> Create New Session</h2>
+
+        <div id="createError" class="error-message"></div>
+        <div id="createSuccess" class="success-message"></div>
+
+        <div class="create-session-form">
+          <form id="createSessionForm">
+            <div class="form-group">
+              <label for="courseSelect">Select Course</label>
+              <select id="courseSelect" name="course_id" required>
+                <option value="">Loading courses...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="sessionName">Session Name</label>
+              <input type="text" id="sessionName" name="session_name" required placeholder="e.g., Week 5 Lecture - Introduction">
+            </div>
+
+            <button type="submit" class="btn btn-success" style="width: 100%;">
+              <i class="ri-add-line"></i> Create Session
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div id="reportsTab" class="tab-content">
+        <h2><i class="ri-file-chart-line"></i> Student Focus Reports</h2>
+        <div id="reportsList" class="loading">
+          <i class="ri-loader-4-line ri-spin"></i> Loading reports...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let teacherCourses = [];
+
+    // Load user info
+    async function loadUserInfo() {
+      try {
+        const response = await fetch('/auth/me');
+        const data = await response.json();
+        if (response.ok) {
+          currentUser = data.user;
+          document.getElementById('userName').textContent = data.user.name;
+        } else {
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        window.location.href = '/login';
+      }
+    }
+
+    // Load teacher's courses
+    async function loadCourses() {
+      try {
+        const response = await fetch('/teacher/courses');
+        const data = await response.json();
+
+        const container = document.getElementById('coursesList');
+        const courseSelect = document.getElementById('courseSelect');
+
+        if (data.courses && data.courses.length > 0) {
+          teacherCourses = data.courses;
+
+          // Update courses list display
+          container.innerHTML = '<div class="courses-grid">' +
+            data.courses.map(course => `
+              <div class="course-card">
+                <div class="course-code">${course.course_code}</div>
+                <div class="course-name">${course.course_name}</div>
+                <div class="course-info">
+                  <span><i class="ri-group-line"></i> ${course.student_count} students</span>
+                </div>
+                <button class="btn btn-primary" onclick="viewEnrolledStudents('${course.id}')" style="margin-top: 12px; width: 100%;">
+                  <i class="ri-user-line"></i> View Students
+                </button>
+              </div>
+            `).join('') +
+            '</div>';
+
+          // Update course select dropdown
+          courseSelect.innerHTML = '<option value="">Select a course</option>' +
+            data.courses.map(course => `
+              <option value="${course.id}">${course.course_code} - ${course.course_name}</option>
+            `).join('');
+        } else {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-book-open-line"></i>
+              <p>No courses assigned yet. Contact admin to assign courses.</p>
+            </div>
+          `;
+
+          courseSelect.innerHTML = '<option value="">No courses available</option>';
+        }
+      } catch (error) {
+        document.getElementById('coursesList').innerHTML = '<div class="empty-state">Failed to load courses</div>';
+      }
+    }
+
+    // Load teacher's sessions
+    async function loadSessions() {
+      try {
+        const response = await fetch('/teacher/sessions');
+        const data = await response.json();
+
+        const container = document.getElementById('sessionsList');
+
+        if (data.sessions && data.sessions.length > 0) {
+          container.innerHTML = '<div class="sessions-list">' +
+            data.sessions.map(session => {
+              const isActive = session.status === 'active';
+              const statusClass = isActive ? 'status-active' : 'status-completed';
+              const startTime = new Date(session.start_time).toLocaleString();
+              const endTime = session.end_time ? new Date(session.end_time).toLocaleString() : 'Ongoing';
+
+              return `
+                <div class="session-item">
+                  <div class="session-info">
+                    <div class="session-name">${session.session_name}</div>
+                    <div class="course-code">${session.course ? session.course.course_code : 'N/A'} - ${session.course ? session.course.course_name : ''}</div>
+                    <div class="session-details">
+                      <span><i class="ri-calendar-line"></i> Started: ${startTime}</span>
+                      ${!isActive ? `<span><i class="ri-check-line"></i> Ended: ${endTime}</span>` : ''}
+                      ${session.statistics ? `<span><i class="ri-group-line"></i> ${session.statistics.student_count} students</span>` : ''}
+                    </div>
+                  </div>
+                  <div class="session-actions">
+                    <span class="session-status ${statusClass}">${session.status.toUpperCase()}</span>
+                    ${isActive ?
+                      `<button class="btn btn-danger" onclick="endSession('${session.id}')">
+                        <i class="ri-stop-line"></i> End Session
+                      </button>` :
+                      `<button class="btn btn-primary" onclick="viewReports('${session.id}')">
+                        <i class="ri-file-list-line"></i> View Reports
+                      </button>
+                      <button class="btn btn-success" onclick="downloadCombinedReport('${session.id}')" style="margin-left: 10px;">
+                        <i class="ri-download-2-line"></i> Download Combined Report
+                      </button>`}
+                  </div>
+                </div>
+              `;
+            }).join('') +
+            '</div>';
+        } else {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-calendar-line"></i>
+              <p>No sessions created yet. Create your first session!</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        document.getElementById('sessionsList').innerHTML = '<div class="empty-state">Failed to load sessions</div>';
+      }
+    }
+
+    // Create new session
+    document.getElementById('createSessionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const courseId = document.getElementById('courseSelect').value;
+      const sessionName = document.getElementById('sessionName').value;
+      const errorDiv = document.getElementById('createError');
+      const successDiv = document.getElementById('createSuccess');
+
+      // Hide previous messages
+      errorDiv.classList.remove('show');
+      successDiv.classList.remove('show');
+
+      if (!courseId) {
+        errorDiv.textContent = 'Please select a course';
+        errorDiv.classList.add('show');
+        return;
+      }
+
+      try {
+        const response = await fetch('/teacher/sessions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            course_id: courseId,
+            session_name: sessionName
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          successDiv.textContent = 'Session created successfully!';
+          successDiv.classList.add('show');
+
+          // Reset form
+          document.getElementById('createSessionForm').reset();
+
+          // Reload sessions
+          await loadSessions();
+
+          // Switch to sessions tab after 1 second
+          setTimeout(() => {
+            switchTab('sessions');
+          }, 1500);
+        } else {
+          errorDiv.textContent = data.error || 'Failed to create session';
+          errorDiv.classList.add('show');
+        }
+      } catch (error) {
+        errorDiv.textContent = 'Error creating session. Please try again.';
+        errorDiv.classList.add('show');
+      }
+    });
+
+    // End session
+    async function endSession(sessionId) {
+      if (!confirm('Are you sure you want to end this session?')) return;
+
+      try {
+        const response = await fetch(`/teacher/sessions/${sessionId}/end`, {
+          method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showToast('Session ended successfully', 'success');
+          await loadSessions();
+        } else {
+          showToast(data.error || 'Failed to end session', 'error');
+        }
+      } catch (error) {
+        showToast('Error ending session', 'error');
+      }
+    }
+
+    // View reports (placeholder)
+    function viewReports(sessionId) {
+      showNotification('Report viewing will be implemented soon. Session ID: ' + sessionId, 'info', 'Coming Soon');
+    }
+
+    // Load all reports for teacher's courses
+    async function loadReports() {
+      if (!currentUser) return;
+
+      try {
+        const response = await fetch(`/teacher/reports`);
+        const data = await response.json();
+
+        const container = document.getElementById('reportsList');
+
+        if (data.reports && data.reports.length > 0) {
+          container.innerHTML = '<div class="reports-list">' +
+            data.reports.map(report => {
+              const focusClass = report.focus_percentage >= 70 ? 'good' : (report.focus_percentage >= 50 ? 'medium' : 'low');
+              const duration = `${Math.floor(report.duration / 60)}m ${report.duration % 60}s`;
+              return `
+                <div class="report-item">
+                  <div class="report-info">
+                    <div class="report-course">
+                      <strong>${report.student ? report.student.name : 'N/A'}</strong> -
+                      ${report.course ? report.course.course_code : 'N/A'}
+                    </div>
+                    <div class="report-date">
+                      ${report.session ? report.session.session_name : 'N/A'} |
+                      ${new Date(report.created_at).toLocaleDateString()} ${new Date(report.created_at).toLocaleTimeString()}
+                      (${duration})
+                    </div>
+                  </div>
+                  <div class="focus-score ${focusClass}">${report.focus_percentage}%</div>
+                  <button class="btn btn-primary" onclick="downloadTeacherReport('${report.id}')" style="margin-left: 10px;">
+                    <i class="ri-download-line"></i> PDF
+                  </button>
+                </div>
+              `;
+            }).join('') +
+            '</div>';
+        } else {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-file-list-line"></i>
+              <p>No reports yet. Students will generate reports after joining focus detection sessions.</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading reports:', error);
+        document.getElementById('reportsList').innerHTML = '<div class="empty-state">Failed to load reports</div>';
+      }
+    }
+
+    // Download individual student report as PDF (for teachers)
+    async function downloadTeacherReport(reportId) {
+      try {
+        // Show loading message
+        const button = event.target.closest('button');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> ...';
+        button.disabled = true;
+
+        // Download PDF directly using new route
+        window.location.href = `/teacher/reports/${reportId}/download`;
+
+        // Restore button after a short delay
+        setTimeout(() => {
+          button.innerHTML = originalHTML;
+          button.disabled = false;
+        }, 1000);
+      } catch (error) {
+        console.error('Error downloading PDF:', error);
+        alert('Error downloading PDF report');
+        event.target.closest('button').innerHTML = '<i class="ri-download-line"></i> PDF';
+        event.target.closest('button').disabled = false;
+      }
+    }
+
+    // Download combined session report (all students in one PDF)
+    function downloadCombinedReport(sessionId) {
+      window.location.href = `/teacher/sessions/${sessionId}/download`;
+    }
+
+    // Load enrollment requests
+    async function loadEnrollmentRequests() {
+      try {
+        const response = await fetch('/teacher/enrollment-requests');
+        const data = await response.json();
+
+        const container = document.getElementById('enrollmentsList');
+
+        if (!response.ok) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-error-warning-line"></i>
+              <p>Error loading enrollment requests: ${data.error}</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (data.requests && data.requests.length > 0) {
+          container.innerHTML = '<div class="enrollment-list">' +
+            data.requests.map(request => {
+              const createdDate = new Date(request.created_at).toLocaleString();
+              return `
+                <div class="enrollment-card" id="enrollment-${request.id}">
+                  <div class="enrollment-info">
+                    <div class="enrollment-student">
+                      <i class="ri-user-line"></i> ${request.student.name}
+                    </div>
+                    <div class="enrollment-course">
+                      <i class="ri-book-line"></i> ${request.course.course_code} - ${request.course.course_name}
+                    </div>
+                    <div class="enrollment-date">
+                      <i class="ri-calendar-line"></i> Requested: ${createdDate}
+                    </div>
+                  </div>
+                  <div class="enrollment-actions">
+                    <button class="btn-approve" onclick="approveEnrollment('${request.id}')">
+                      <i class="ri-check-line"></i> Approve
+                    </button>
+                    <button class="btn-reject" onclick="rejectEnrollment('${request.id}')">
+                      <i class="ri-close-line"></i> Reject
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('') +
+            '</div>';
+        } else {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-user-add-line"></i>
+              <p>No pending enrollment requests</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading enrollment requests:', error);
+        document.getElementById('enrollmentsList').innerHTML = `
+          <div class="empty-state">
+            <i class="ri-error-warning-line"></i>
+            <p>Error loading enrollment requests. Please try again.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Approve enrollment request
+    async function approveEnrollment(requestId) {
+      const confirmed = await showConfirm('Approve this student\'s enrollment request?', 'Approve Enrollment');
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch(`/teacher/enrollment-requests/${requestId}/approve`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          // Remove the card with animation
+          const card = document.getElementById(`enrollment-${requestId}`);
+          if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(-20px)';
+            setTimeout(() => {
+              card.remove();
+              // Check if list is now empty
+              const container = document.getElementById('enrollmentsList');
+              const list = container.querySelector('.enrollment-list');
+              if (list && list.children.length === 0) {
+                loadEnrollmentRequests();
+              }
+            }, 300);
+          }
+
+          showToast('Enrollment approved successfully!', 'success');
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Error approving enrollment:', error);
+        showToast('Error approving enrollment. Please try again.', 'error');
+      }
+    }
+
+    // Reject enrollment request
+    async function rejectEnrollment(requestId) {
+      const confirmed = await showConfirm('Are you sure you want to reject this enrollment request?', 'Reject Enrollment');
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch(`/teacher/enrollment-requests/${requestId}/reject`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          // Remove the card with animation
+          const card = document.getElementById(`enrollment-${requestId}`);
+          if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(20px)';
+            setTimeout(() => {
+              card.remove();
+              // Check if list is now empty
+              const container = document.getElementById('enrollmentsList');
+              const list = container.querySelector('.enrollment-list');
+              if (list && list.children.length === 0) {
+                loadEnrollmentRequests();
+              }
+            }, 300);
+          }
+
+          showToast('Enrollment request rejected.', 'info');
+        } else {
+          showToast(data.error, 'error');
+        }
+      } catch (error) {
+        console.error('Error rejecting enrollment:', error);
+        showToast('Error rejecting enrollment. Please try again.', 'error');
+      }
+    }
+
+    // Switch tabs
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      event.target.classList.add('active');
+
+      if (tab === 'courses') {
+        document.getElementById('coursesTab').classList.add('active');
+        loadCourses();
+      } else if (tab === 'sessions') {
+        document.getElementById('sessionsTab').classList.add('active');
+        loadSessions();
+      } else if (tab === 'enrollments') {
+        document.getElementById('enrollmentsTab').classList.add('active');
+        loadEnrollmentRequests();
+      } else if (tab === 'create') {
+        document.getElementById('createTab').classList.add('active');
+        loadCourses(); // Load courses for dropdown
+      } else if (tab === 'reports') {
+        document.getElementById('reportsTab').classList.add('active');
+        loadReports();
+      }
+    }
+
+    // View enrolled students for a course
+    async function viewEnrolledStudents(courseId) {
+      try {
+        const response = await fetch(`/teacher/courses/${courseId}/students`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          alert(`Error: ${data.error}`);
+          return;
+        }
+
+        // Populate modal
+        const modalTitle = document.getElementById('studentsModalTitle');
+        const studentsTableBody = document.getElementById('studentsTableBody');
+
+        modalTitle.textContent = `Enrolled Students - ${data.course.course_name}`;
+
+        if (data.students && data.students.length > 0) {
+          studentsTableBody.innerHTML = data.students.map((student, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${student.name}</td>
+              <td>${student.email}</td>
+            </tr>
+          `).join('');
+        } else {
+          studentsTableBody.innerHTML = `
+            <tr>
+              <td colspan="3" style="text-align: center; color: #64748b; padding: 24px;">
+                No students enrolled yet
+              </td>
+            </tr>
+          `;
+        }
+
+        // Show modal
+        document.getElementById('studentsModal').classList.add('show');
+      } catch (error) {
+        console.error('Error loading students:', error);
+        alert('Error loading students. Please try again.');
+      }
+    }
+
+    // Close modal
+    function closeStudentsModal() {
+      document.getElementById('studentsModal').classList.remove('show');
+    }
+
+    // Close modal on background click
+    window.addEventListener('click', (event) => {
+      const modal = document.getElementById('studentsModal');
+      if (event.target === modal) {
+        closeStudentsModal();
+      }
+    });
+
+    // Logout
+    async function logout() {
+      try {
+        await fetch('/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+      } catch (error) {
+        window.location.href = '/login';
+      }
+    }
+
+    // Load data on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadUserInfo();
+      await loadCourses();
+      await loadSessions();
+    });
+
+    // Notification Modal Functions
+    function showNotification(message, type = 'info', title = '') {
+      const modal = document.getElementById('notificationModal');
+      const header = document.getElementById('notificationHeader');
+      const icon = document.getElementById('notificationIcon');
+      const titleEl = document.getElementById('notificationTitle');
+      const body = document.getElementById('notificationBody');
+      header.className = `notification-header ${type}`;
+      const icons = {
+        success: 'ri-checkbox-circle-line',
+        error: 'ri-error-warning-line',
+        warning: 'ri-alert-line',
+        info: 'ri-information-line'
+      };
+      icon.className = icons[type] || icons.info;
+      const titles = {
+        success: title || 'Success',
+        error: title || 'Error',
+        warning: title || 'Warning',
+        info: title || 'Information'
+      };
+      titleEl.textContent = titles[type] || title || 'Notification';
+      body.textContent = message;
+      modal.classList.add('show');
+    }
+
+    function closeNotification() {
+      document.getElementById('notificationModal').classList.remove('show');
+    }
+
+    function showToast(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = {
+        success: 'ri-checkbox-circle-fill',
+        error: 'ri-error-warning-fill',
+        warning: 'ri-alert-fill',
+        info: 'ri-information-fill'
+      };
+      const titles = { success: 'Success', error: 'Error', warning: 'Warning', info: 'Info' };
+      toast.innerHTML = `
+        <div class="toast-icon"><i class="${icons[type]}"></i></div>
+        <div class="toast-content">
+          <div class="toast-title">${titles[type]}</div>
+          <div class="toast-message">${message}</div>
+        </div>
+        <div class="toast-close" onclick="this.parentElement.remove()"><i class="ri-close-line"></i></div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    let confirmCallback = null;
+    function showConfirm(message, title = 'Confirm Action') {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmBody').textContent = message;
+        confirmCallback = resolve;
+        modal.classList.add('show');
+      });
+    }
+
+    function closeConfirm(result) {
+      document.getElementById('confirmModal').classList.remove('show');
+      if (confirmCallback) {
+        confirmCallback(result);
+        confirmCallback = null;
+      }
+    }
+
+    document.getElementById('notificationModal').addEventListener('click', function(e) {
+      if (e.target === this) closeNotification();
+    });
+    document.getElementById('confirmModal').addEventListener('click', function(e) {
+      if (e.target === this) closeConfirm(false);
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        if (document.getElementById('notificationModal').classList.contains('show')) closeNotification();
+        if (document.getElementById('confirmModal').classList.contains('show')) closeConfirm(false);
+      }
+    });
+  </script>
+
+  <!-- Notification Modal -->
+  <div id="notificationModal" class="notification-modal">
+    <div class="notification-content">
+      <div id="notificationHeader" class="notification-header">
+        <div class="notification-icon"><i id="notificationIcon"></i></div>
+        <div id="notificationTitle" class="notification-title"></div>
+      </div>
+      <div id="notificationBody" class="notification-body"></div>
+      <div class="notification-footer">
+        <button class="notification-btn notification-btn-primary" onclick="closeNotification()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="notification-modal">
+    <div class="notification-content">
+      <div id="confirmHeader" class="notification-header warning">
+        <div class="notification-icon"><i class="ri-alert-line"></i></div>
+        <div id="confirmTitle" class="notification-title">Confirm Action</div>
+      </div>
+      <div id="confirmBody" class="notification-body"></div>
+      <div class="notification-footer">
+        <button class="notification-btn notification-btn-secondary" onclick="closeConfirm(false)">Cancel</button>
+        <button class="notification-btn notification-btn-primary" onclick="closeConfirm(true)" style="background: #ef4444;">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enrolled Students Modal -->
+  <div id="studentsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="studentsModalTitle">Enrolled Students</h3>
+        <button class="close-modal" onclick="closeStudentsModal()">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <table class="students-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody">
+            <tr>
+              <td colspan="3" style="text-align: center; padding: 24px;">
+                <i class="ri-loader-4-line ri-spin"></i> Loading...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
