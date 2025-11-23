@@ -168,6 +168,18 @@ class User:
         """
         return list(self.collection.find({"role": "teacher", "approved": False}))
 
+    def get_approved_teachers(self):
+        """
+        Get all approved teachers (admin function)
+
+        Returns:
+            list: List of approved teacher documents
+        """
+        return list(self.collection.find({
+            "role": "teacher",
+            "approved": True
+        }).sort("name", 1))
+
     def get_all_students(self):
         """
         Get all students

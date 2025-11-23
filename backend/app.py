@@ -3,8 +3,9 @@ Focus Detection App - Main Application
 Backend foundation with Flask + MongoDB
 """
 
-from flask import Flask, jsonify, render_template, session, redirect, url_for, Response
+from flask import Flask, jsonify, render_template, session, redirect, url_for, Response, request
 from flask_pymongo import PyMongo
+from flask_cors import CORS
 from config import config
 import os
 import cv2
@@ -29,6 +30,9 @@ app = Flask(__name__)
 # Load configuration
 env = os.environ.get('FLASK_ENV', 'development')
 app.config.from_object(config[env])
+
+# Enable CORS for React frontend
+CORS(app, supports_credentials=True, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
 
 # Initialize MongoDB
 mongo = PyMongo(app)
@@ -204,7 +208,8 @@ def start_focus_detection(session_id):
         'distracted_frames': 0,
         'total_frames': 0,
         'start_time': time.time(),
-        'student_id': session['user_id']
+        'student_id': session['user_id'],
+        'tab_switches': []  # track tab/window switches from the client
     }
 
     return jsonify({"status": "Focus detection started", "session_id": session_id})
@@ -215,6 +220,34 @@ def video_feed(session_id):
     """Video streaming route"""
     return Response(generate_frames(session_id),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/session/<session_id>/tab-switch', methods=['POST'])
+def record_tab_switch(session_id):
+    """
+    Record a tab switch event for the active session.
+    The client should call this whenever the page visibility changes.
+    """
+    if 'user_id' not in session:
+        return jsonify({"error": "Authentication required"}), 401
+
+    session_data = active_sessions.get(session_id)
+    if not session_data:
+        return jsonify({"error": "Session not found or not active"}), 404
+
+    if session_data.get('student_id') != session['user_id']:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    payload = request.get_json(silent=True) or {}
+    timestamp = payload.get('timestamp') or datetime.utcnow().isoformat()
+    reason = payload.get('reason') or 'visibilitychange'
+
+    session_data.setdefault('tab_switches', []).append({
+        "timestamp": timestamp,
+        "reason": reason
+    })
+
+    return jsonify({"status": "recorded", "count": len(session_data['tab_switches'])}), 200
 
 
 @app.route('/session/<session_id>/stop', methods=['POST'])
@@ -238,6 +271,7 @@ def stop_focus_detection(session_id):
     focused_frames = session_data['focused_frames']
     distracted_frames = session_data['distracted_frames']
     focus_percentage = (focused_frames / total_frames * 100) if total_frames else 0
+    tab_switches = session_data.get('tab_switches', [])
 
     # Get session and course info from database
     from models.session_model import Session
@@ -261,7 +295,8 @@ def stop_focus_detection(session_id):
             focused_frames=focused_frames,
             distracted_frames=distracted_frames,
             total_frames=total_frames,
-            duration=duration
+            duration=duration,
+            tab_switches=tab_switches
         )
 
     # Clean up
@@ -274,7 +309,8 @@ def stop_focus_detection(session_id):
             "total_frames": total_frames,
             "focused_frames": focused_frames,
             "distracted_frames": distracted_frames,
-            "duration": duration
+            "duration": duration,
+            "tab_switches_count": len(tab_switches)
         }
     })
 
@@ -316,6 +352,7 @@ def get_student_reports(student_id):
             'distracted_frames': report['distracted_frames'],
             'total_frames': report['total_frames'],
             'duration': report['duration'],
+            'tab_switches_count': len(report.get('tab_switches', [])),
             'created_at': report['created_at'].isoformat(),
             'report_path': report.get('report_path'),
             'course': {
@@ -374,6 +411,7 @@ def get_teacher_reports(teacher_id):
                     'distracted_frames': report['distracted_frames'],
                     'total_frames': report['total_frames'],
                     'duration': report['duration'],
+                    'tab_switches_count': len(report.get('tab_switches', [])),
                     'created_at': report['created_at'].isoformat(),
                     'report_path': report.get('report_path'),
                     'course': {
@@ -520,7 +558,8 @@ def generate_pdf_report(report_id):
         ['Focus Percentage:', f"{focus_pct}%", grade],
         ['Focused Frames:', str(report['focused_frames']), ''],
         ['Distracted Frames:', str(report['distracted_frames']), ''],
-        ['Total Frames Analyzed:', str(report['total_frames']), '']
+        ['Total Frames Analyzed:', str(report['total_frames']), ''],
+        ['Tab Switches:', str(len(report.get('tab_switches', []))), '']
     ]
     stats_table = Table(stats_data, colWidths=[2.5*inch, 1.5*inch, 2*inch])
     stats_table.setStyle(TableStyle([

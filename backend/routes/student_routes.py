@@ -350,6 +350,7 @@ def get_my_reports():
                 "distracted_frames": report.get('distracted_frames', 0),
                 "total_frames": report.get('total_frames', 0),
                 "duration": report.get('duration', 0),
+                "tab_switches_count": len(report.get('tab_switches', [])),
                 "report_path": report.get('report_path'),
                 "created_at": report['created_at'].isoformat()
             })
@@ -400,6 +401,7 @@ def get_report_details(report_id):
                 "total_frames": report.get('total_frames', 0),
                 "duration": report.get('duration', 0),
                 "tab_switches": report.get('tab_switches', []),
+                "tab_switches_count": len(report.get('tab_switches', [])),
                 "report_path": report.get('report_path'),
                 "created_at": report['created_at'].isoformat()
             }
@@ -549,7 +551,8 @@ def download_report_pdf(report_id):
             ['Focus Percentage:', f"{focus_pct}%", grade],
             ['Focused Frames:', str(report['focused_frames']), ''],
             ['Distracted Frames:', str(report['distracted_frames']), ''],
-            ['Total Frames Analyzed:', str(report['total_frames']), '']
+            ['Total Frames Analyzed:', str(report['total_frames']), ''],
+            ['Tab Switches:', str(len(report.get('tab_switches', []))), '']
         ]
         stats_table = Table(stats_data, colWidths=[2.5*inch, 1.5*inch, 2*inch])
         stats_table.setStyle(TableStyle([

@@ -1,0 +1,135 @@
+/* ============================================
+   NEXT STEP BANNER - Coffee Theme
+   ============================================ */
+
+.next-step-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.next-step-banner.info {
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-hover) 100%);
+  border: 1px solid var(--coffee-latte);
+}
+
+.next-step-banner.info .banner-icon {
+  background: var(--coffee-caramel);
+}
+
+.next-step-banner.neutral {
+  background: linear-gradient(135deg, var(--bg-card-hover) 0%, var(--border-light) 100%);
+  border: 1px solid var(--border-medium);
+}
+
+.next-step-banner.neutral .banner-icon {
+  background: var(--text-muted);
+}
+
+.next-step-banner.success {
+  background: linear-gradient(135deg, var(--success-light) 0%, #c6f6d5 100%);
+  border: 1px solid var(--success);
+}
+
+.next-step-banner.success .banner-icon {
+  background: var(--success);
+}
+
+.next-step-banner.warning {
+  background: linear-gradient(135deg, var(--warning-light) 0%, #fde68a 100%);
+  border: 1px solid var(--warning);
+}
+
+.next-step-banner.warning .banner-icon {
+  background: var(--warning);
+}
+
+.banner-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.banner-content {
+  flex: 1;
+}
+
+.banner-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.banner-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Darker text for warning banner with yellow background */
+.next-step-banner.warning .banner-message {
+  color: var(--warning-dark);
+}
+
+.banner-action {
+  padding: 10px 20px;
+  background: var(--coffee-dark);
+  color: var(--text-light);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.banner-action:hover {
+  background: var(--bg-dark);
+  transform: translateX(4px);
+}
+
+.next-step-banner.success .banner-action {
+  background: var(--success-dark);
+}
+
+.next-step-banner.success .banner-action:hover {
+  background: #1e5339;
+}
+
+@media (max-width: 600px) {
+  .next-step-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .banner-action {
+    width: 100%;
+    justify-content: center;
+  }
+}

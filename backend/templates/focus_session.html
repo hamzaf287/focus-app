@@ -442,6 +442,27 @@
     let timerInterval = null;
     let startTime = null;
     let statsInterval = null;
+    let tabSwitchCount = 0;
+
+    async function logTabSwitch(reason = 'visibilitychange') {
+      if (!isRunning) return;
+      try {
+        tabSwitchCount += 1;
+        await fetch(`/session/${sessionId}/tab-switch`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            timestamp: new Date().toISOString(),
+            reason
+          }),
+          keepalive: true
+        });
+      } catch (err) {
+        console.warn('Failed to log tab switch', err);
+      }
+    }
 
     // Start detection
     async function startDetection() {
@@ -454,6 +475,7 @@
         if (response.ok) {
           isRunning = true;
           startTime = Date.now();
+          tabSwitchCount = 0;
 
           // Update UI
           document.getElementById('startBtn').disabled = true;
@@ -604,8 +626,16 @@
     // Handle page unload (stop session if running)
     window.addEventListener('beforeunload', (e) => {
       if (isRunning) {
+        logTabSwitch('page_unload');
         e.preventDefault();
         e.returnValue = 'Focus detection is still running. Are you sure you want to leave?';
+      }
+    });
+
+    // Record tab switches when the page is hidden (user switches away)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        logTabSwitch('hidden');
       }
     });
 

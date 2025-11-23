@@ -1,0 +1,147 @@
+/* ============================================
+   COFFEE THEME - Color Palette (Light Mode)
+   ============================================ */
+:root {
+  /* Primary Coffee Colors */
+  --coffee-dark: #4A3728;           /* Dark roast - for accents only */
+  --coffee-medium: #6B5344;         /* Medium roast - headers */
+  --coffee-light: #8B6914;          /* Light roast / primary accent */
+  --coffee-caramel: #A67C52;        /* Caramel - warm accent */
+  --coffee-latte: #D4C4A8;          /* Latte - muted accent */
+
+  /* Background Colors - LIGHTENED */
+  --bg-dark: #3D2E24;               /* Softer dark - navbar/headers only */
+  --bg-medium: #5C483A;             /* Mid-brown for accents */
+  --bg-light: #F5EDE0;              /* Light cream - main page background */
+  --bg-card: #FFFDF8;               /* White cream - card background */
+  --bg-card-hover: #F8F3EA;         /* Slightly darker cream on hover */
+  --bg-input: #FFFFFF;              /* Pure white for inputs */
+
+  /* Text Colors - Adjusted for light backgrounds */
+  --text-primary: #3D2E24;          /* Softer dark brown - main text */
+  --text-secondary: #5C483A;        /* Medium brown - secondary text */
+  --text-muted: #8B7A68;            /* Lighter muted brown - hints */
+  --text-light: #FFFDF8;            /* Light cream - text on dark bg */
+  --text-on-primary: #FFFDF8;       /* Text on primary buttons */
+
+  /* Accent/State Colors */
+  --primary: #7B5A3C;               /* Rich brown - slightly lighter */
+  --primary-hover: #A67C52;         /* Caramel hover */
+  --primary-dark: #5C483A;          /* Darker for pressed state */
+
+  /* Gradients - Mid-tone for headers */
+  --gradient-primary: linear-gradient(135deg, #7B5A3C 0%, #A67C52 100%);
+  --gradient-dark: linear-gradient(135deg, #5C483A 0%, #7B5A3C 100%);
+  --gradient-warm: linear-gradient(135deg, #A67C52 0%, #D4C4A8 100%);
+  --gradient-header: linear-gradient(135deg, #6B5344 0%, #8B6914 100%);
+  --gradient-navbar: linear-gradient(135deg, #4A3728 0%, #6B5344 50%, #7B5A3C 100%);
+
+  /* Status Colors - kept but warmed */
+  --success: #4A7C59;               /* Warm forest green */
+  --success-light: #E8F5E9;         /* Light green bg */
+  --success-dark: #2E5339;          /* Dark green */
+
+  --error: #B54A4A;                 /* Warm red */
+  --error-light: #FCEAEA;           /* Light red bg */
+  --error-dark: #8B3A3A;            /* Dark red */
+
+  --warning: #C4873B;               /* Warm amber */
+  --warning-light: #FFF3E0;         /* Light amber bg */
+  --warning-dark: #8B5E2A;          /* Dark amber */
+
+  --info: #5C7A99;                  /* Muted blue-gray */
+  --info-light: #E3EDF5;            /* Light info bg */
+
+  /* Borders */
+  --border-light: #E8DFD0;          /* Light warm border */
+  --border-medium: #D4C4A8;         /* Medium warm border */
+  --border-dark: #A6927A;           /* Dark warm border */
+
+  /* Shadows - Softened */
+  --shadow-sm: 0 1px 3px rgba(74, 55, 40, 0.08);
+  --shadow-md: 0 4px 12px rgba(74, 55, 40, 0.12);
+  --shadow-lg: 0 8px 24px rgba(74, 55, 40, 0.16);
+  --shadow-glow: 0 0 20px rgba(166, 124, 82, 0.25);
+}
+
+/* Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-light);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* Note: Remix Icons and Inter font are loaded via index.html <link> tags for faster loading */
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-card-hover);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--coffee-caramel);
+}
+
+/* Selection */
+::selection {
+  background: var(--coffee-caramel);
+  color: var(--text-light);
+}
+
+/* Links */
+a {
+  color: var(--coffee-caramel);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: var(--primary-hover);
+}
+
+/* Animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ri-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }

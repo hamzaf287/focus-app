@@ -1,0 +1,84 @@
+/* ============================================
+   WELCOME CARD - Coffee Theme
+   ============================================ */
+
+.welcome-card {
+  background: var(--gradient-primary);
+  border-radius: 16px;
+  padding: 24px 32px;
+  color: var(--text-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(166, 124, 82, 0.3);
+}
+
+.welcome-content {
+  flex: 1;
+}
+
+.welcome-greeting {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.welcome-name {
+  color: #fde68a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-subtitle {
+  font-size: 16px;
+  opacity: 0.9;
+  color: var(--coffee-latte);
+}
+
+.welcome-stats {
+  display: flex;
+  gap: 32px;
+}
+
+.welcome-stat {
+  text-align: center;
+  padding: 12px 20px;
+  background: rgba(196, 164, 132, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(196, 164, 132, 0.2);
+}
+
+.stat-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.stat-label {
+  display: block;
+  font-size: 13px;
+  opacity: 1;
+  margin-top: 4px;
+  font-weight: 500;
+  color: var(--coffee-latte);
+}
+
+@media (max-width: 768px) {
+  .welcome-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .welcome-stats {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .welcome-greeting {
+    font-size: 24px;
+  }
+}

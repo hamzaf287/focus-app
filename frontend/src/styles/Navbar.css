@@ -1,0 +1,523 @@
+/* ==========================================
+   Modern Navbar - Coffee Theme
+   ========================================== */
+
+.navbar {
+  position: relative;
+  background: linear-gradient(135deg, #5C483A 0%, #7B5A3C 50%, #A67C52 100%);
+  padding: 0;
+  color: var(--text-light);
+  box-shadow:
+    0 4px 20px rgba(92, 72, 58, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+/* Background pattern overlay */
+.navbar-bg-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(196, 164, 132, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* Session mode - slightly darker for focus */
+.navbar.navbar-session {
+  background: linear-gradient(135deg, #4A3728 0%, #5C483A 50%, #6B5344 100%);
+  box-shadow:
+    0 4px 20px rgba(74, 55, 40, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ==========================================
+   Brand Section
+   ========================================== */
+
+.navbar-brand {
+  flex-shrink: 0;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--text-light);
+  transition: transform 0.2s ease;
+}
+
+.brand-link:hover {
+  transform: scale(1.02);
+}
+
+.brand-logo {
+  width: 44px;
+  height: 44px;
+  background: rgba(196, 164, 132, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border: 1px solid rgba(196, 164, 132, 0.3);
+  transition: all 0.3s ease;
+}
+
+.brand-link:hover .brand-logo {
+  background: rgba(196, 164, 132, 0.3);
+  transform: rotate(-5deg);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  color: var(--text-light);
+}
+
+.brand-tagline {
+  font-size: 11px;
+  opacity: 0.8;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--coffee-latte);
+}
+
+/* ==========================================
+   Center Breadcrumb
+   ========================================== */
+
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(196, 164, 132, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  border: 1px solid rgba(196, 164, 132, 0.2);
+}
+
+.breadcrumb-role,
+.breadcrumb-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.breadcrumb-role {
+  opacity: 0.85;
+  color: var(--coffee-latte);
+}
+
+.breadcrumb-section {
+  color: var(--text-light);
+}
+
+.breadcrumb-separator {
+  font-size: 16px;
+  opacity: 0.5;
+  color: var(--coffee-latte);
+}
+
+/* ==========================================
+   User Section
+   ========================================== */
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px 6px 6px;
+  background: rgba(196, 164, 132, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 50px;
+  border: 1px solid rgba(196, 164, 132, 0.2);
+  transition: all 0.3s ease;
+}
+
+.user-card:hover {
+  background: rgba(196, 164, 132, 0.25);
+}
+
+.user-avatar-wrapper {
+  position: relative;
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--gradient-warm);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: transform 0.2s ease;
+  color: white;
+}
+
+.user-card:hover .user-avatar {
+  transform: scale(1.05);
+}
+
+.user-avatar.role-student {
+  background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+}
+
+.user-avatar.role-teacher {
+  background: linear-gradient(135deg, var(--warning) 0%, var(--warning-dark) 100%);
+}
+
+.user-avatar.role-admin {
+  background: linear-gradient(135deg, var(--error) 0%, var(--error-dark) 100%);
+}
+
+.avatar-status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: var(--success);
+  border-radius: 50%;
+  border: 2px solid var(--coffee-medium);
+  box-shadow: 0 0 0 2px rgba(74, 124, 89, 0.3);
+}
+
+.navbar.navbar-session .avatar-status {
+  border-color: var(--bg-dark);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-light);
+}
+
+.user-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(196, 164, 132, 0.3);
+  color: var(--text-light);
+}
+
+.user-role-badge i {
+  font-size: 10px;
+}
+
+.user-role-badge.role-student {
+  background: rgba(74, 124, 89, 0.4);
+  color: #a7f3d0;
+}
+
+.user-role-badge.role-teacher {
+  background: rgba(196, 135, 59, 0.4);
+  color: #fde68a;
+}
+
+.user-role-badge.role-admin {
+  background: rgba(181, 74, 74, 0.4);
+  color: #fecaca;
+}
+
+/* ==========================================
+   Action Buttons
+   ========================================== */
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-action-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(196, 164, 132, 0.15);
+  color: var(--text-light);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  border: 1px solid rgba(196, 164, 132, 0.2);
+}
+
+.nav-action-btn:hover {
+  background: rgba(196, 164, 132, 0.3);
+  transform: translateY(-2px);
+}
+
+.nav-action-btn.logout:hover {
+  background: rgba(181, 74, 74, 0.4);
+}
+
+/* ==========================================
+   Mobile Menu Button
+   ========================================== */
+
+.mobile-menu-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(196, 164, 132, 0.2);
+  color: var(--text-light);
+  font-size: 22px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu-btn:hover {
+  background: rgba(196, 164, 132, 0.35);
+}
+
+/* ==========================================
+   Mobile Menu Dropdown
+   ========================================== */
+
+.mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #5C483A 0%, #7B5A3C 100%);
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 40px rgba(92, 72, 58, 0.3);
+}
+
+.mobile-menu.open {
+  max-height: 400px;
+  padding: 16px;
+}
+
+.navbar.navbar-session .mobile-menu {
+  background: linear-gradient(135deg, #4A3728 0%, #5C483A 100%);
+}
+
+.mobile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(196, 164, 132, 0.15);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.mobile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  background: var(--gradient-warm);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.mobile-avatar.role-teacher {
+  background: linear-gradient(135deg, var(--warning) 0%, var(--warning-dark) 100%);
+}
+
+.mobile-avatar.role-admin {
+  background: linear-gradient(135deg, var(--error) 0%, var(--error-dark) 100%);
+}
+
+.mobile-user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mobile-user-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.mobile-user-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.9;
+  color: var(--coffee-latte);
+}
+
+.mobile-menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(196, 164, 132, 0.15);
+  border: none;
+  border-radius: 10px;
+  color: var(--text-light);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.mobile-menu-item:hover {
+  background: rgba(196, 164, 132, 0.3);
+}
+
+.mobile-menu-item.logout:hover {
+  background: rgba(181, 74, 74, 0.4);
+}
+
+.mobile-menu-item i {
+  font-size: 20px;
+}
+
+/* ==========================================
+   Responsive Styles
+   ========================================== */
+
+@media (max-width: 900px) {
+  .navbar-center {
+    display: none;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .navbar-actions {
+    display: none;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .mobile-menu {
+    display: block;
+  }
+}
+
+@media (max-width: 600px) {
+  .navbar-content {
+    padding: 10px 16px;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .brand-logo {
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
+  }
+
+  .user-card {
+    padding: 4px;
+    background: transparent;
+    border: none;
+  }
+
+  .user-avatar-wrapper {
+    display: none;
+  }
+}
+
+/* ==========================================
+   Animation for logo icon
+   ========================================== */
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(196, 164, 132, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(196, 164, 132, 0);
+  }
+}
+
+.brand-logo {
+  animation: pulse-glow 3s ease-in-out infinite;
+}

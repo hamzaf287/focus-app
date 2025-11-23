@@ -269,6 +269,7 @@ def get_session_reports(session_id):
                 "distracted_frames": report.get('distracted_frames', 0),
                 "total_frames": report.get('total_frames', 0),
                 "duration": report.get('duration', 0),
+                "tab_switches_count": len(report.get('tab_switches', [])),
                 "report_path": report.get('report_path'),
                 "created_at": report['created_at'].isoformat()
             })
@@ -504,6 +505,7 @@ def download_session_combined_report(session_id):
                 ['Distracted Frames:', str(distracted_frames)],
                 ['Total Frames:', str(total_frames)],
                 ['Duration:', f"{duration_min} min {duration_sec % 60} sec"],
+                ['Tab Switches:', str(len(report.get('tab_switches', [])))]
             ]
 
             student_detail_table = Table(student_detail_data, colWidths=[2*inch, 3*inch])
@@ -688,7 +690,8 @@ def download_student_report(report_id):
             ['Grade:', grade],
             ['Focused Frames:', str(report.get('focused_frames', 0))],
             ['Distracted Frames:', str(report.get('distracted_frames', 0))],
-            ['Total Frames:', str(report.get('total_frames', 0))]
+            ['Total Frames:', str(report.get('total_frames', 0))],
+            ['Tab Switches:', str(len(report.get('tab_switches', [])))]
         ]
 
         focus_table = Table(focus_data, colWidths=[2*inch, 4*inch])

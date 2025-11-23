@@ -1,10 +1,15 @@
-# Video files
+# Video files (legacy and new backend structure)
 static/videos/*.avi
 static/videos/*.mp4
+backend/static/videos/*.avi
+backend/static/videos/*.mp4
 
-# Report files
+# Generated report files (legacy and new backend structure)
 static/reports/*.txt
 static/reports/*.pdf
+backend/static/reports/*.txt
+backend/static/reports/*.pdf
+backend/static/reports/
 
 # Python cache
 __pycache__/
@@ -41,3 +46,11 @@ templates/history.html
 
 # Cleanup scripts (optional - keep if you want)
 cleanup_project.py
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+
+# Test caches and coverage
+.pytest_cache/
+.coverage

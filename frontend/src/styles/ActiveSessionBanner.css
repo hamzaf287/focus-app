@@ -1,0 +1,235 @@
+.active-session-banner {
+  position: relative;
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 20px rgba(16, 185, 129, 0.3),
+    0 0 40px rgba(16, 185, 129, 0.15);
+}
+
+/* Animated pulse rings */
+.asb-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: -100px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  transform: translateY(-50%);
+  animation: pulse-expand 3s ease-in-out infinite;
+}
+
+.asb-pulse-ring.delay {
+  animation-delay: 1.5s;
+}
+
+@keyframes pulse-expand {
+  0% {
+    transform: translateY(-50%) scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-50%) scale(1.2);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-50%) scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+.asb-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Live indicator */
+.asb-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+
+.asb-live-dot {
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  animation: live-pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes live-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+.asb-live-text {
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+/* Main content layout */
+.asb-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.asb-info {
+  flex: 1;
+}
+
+.asb-title {
+  color: white;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.asb-title i {
+  font-size: 28px;
+  animation: broadcast-pulse 2s ease-in-out infinite;
+}
+
+@keyframes broadcast-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.asb-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.asb-course,
+.asb-session-name,
+.asb-teacher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.asb-course {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.asb-course i,
+.asb-session-name i,
+.asb-teacher i {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* Join button */
+.asb-join-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: white;
+  color: #059669;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+
+.asb-join-btn i:first-child {
+  font-size: 22px;
+}
+
+.asb-arrow {
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.asb-join-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+}
+
+.asb-join-btn:hover .asb-arrow {
+  transform: translateX(4px);
+}
+
+.asb-join-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .active-session-banner {
+    padding: 20px;
+  }
+
+  .asb-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
+
+  .asb-title {
+    font-size: 20px;
+  }
+
+  .asb-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .asb-join-btn {
+    justify-content: center;
+    padding: 16px 24px;
+  }
+
+  .asb-pulse-ring {
+    display: none;
+  }
+}
+
+/* Decorative pattern overlay */
+.active-session-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40%;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}

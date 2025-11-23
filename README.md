@@ -89,62 +89,104 @@ A comprehensive webcam-based focus tracking application with role-based access c
 
 ## Installation
 
-### 1. Clone the Repository
+These steps are written so you can follow them even if you are not a programmer.
+
+### 1. Install the tools you need
+
+You only need to do this once on a computer.
+
+- **Python 3.8 or higher**
+  - Download from [https://www.python.org/downloads/](https://www.python.org/downloads/)
+  - During installation on Windows, make sure “Add Python to PATH” is checked.
+- **Node.js (for the frontend)**
+  - Download from [https://nodejs.org](https://nodejs.org) (LTS version is fine).
+- **Git (to download this project)**
+  - Download from [https://git-scm.com/downloads](https://git-scm.com/downloads)
+
+### 2. Download the project
+
+Open a terminal / command prompt and run:
 
 ```bash
 git clone <repository-url>
 cd focus_app
 ```
 
-### 2. Create Virtual Environment (Recommended)
+### 3. Set up the backend (Flask API)
 
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
+1. Go into the backend folder:
+   ```bash
+   cd backend
+   ```
 
-# macOS/Linux
-python3 -m venv venv
-source venv/bin/activate
-```
+2. Create and activate a virtual environment (recommended):
 
-### 3. Install Dependencies
+   ```bash
+   # Windows
+   python -m venv venv
+   venv\Scripts\activate
 
-```bash
-pip install -r requirements.txt
-```
+   # macOS / Linux
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
 
-**Or install manually:**
+3. Install Python dependencies:
 
-```bash
-pip install flask flask-pymongo pymongo bcrypt
-pip install torch torchvision
-pip install opencv-python
-pip install reportlab
-pip install requests  # For testing
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 4. Configure MongoDB
+4. Configure MongoDB (database):
+   - Open `backend/config.py` in a text editor.
+   - Find the `MONGO_URI` setting.
+   - If you already have a MongoDB connection string, paste it there.
+   - Otherwise, you can leave the existing value and use the same database that was used during development.
 
-Edit `config.py` and update the MongoDB URI:
+5. Start the backend server:
 
-```python
-MONGO_URI = 'your-mongodb-connection-string'
-```
+   ```bash
+   python app.py
+   ```
 
-**For MongoDB Atlas:**
-1. Create a cluster at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
-2. Create a database user
-3. Get your connection string
-4. Replace `<password>` with your database user password
+   - The backend will start on: `http://localhost:5000`
+   - Leave this window open while you use the app.
 
-### 5. Run the Application
+### 4. Set up the frontend (React UI)
 
-```bash
-python app.py
-```
+Open a **new** terminal / command prompt (do not close the backend one) and:
 
-The application will start on `http://localhost:5000`
+1. Go into the frontend folder:
+   ```bash
+   cd focus_app/frontend
+   ```
+
+2. Install JavaScript dependencies (this may take a few minutes the first time):
+
+   ```bash
+   npm install
+   ```
+
+3. Start the frontend development server:
+
+   ```bash
+   npm run dev
+   ```
+
+   - The frontend will tell you a URL, usually: `http://localhost:5173`
+   - Open that URL in your browser.
+   - The frontend is already configured to talk to the backend at `http://localhost:5000`.
+
+### 5. Logging in and using the app
+
+Once both servers are running:
+
+1. Open the frontend URL in your browser (for example `http://localhost:5173`).
+2. Use the **Register** page to create:
+   - A **student** account for testing student features.
+   - A **teacher** account (will need admin approval).
+3. To create an **admin** account, you may need to insert one directly in the database or use a preconfigured admin if one exists in your environment.
+4. As admin, approve teacher accounts and create courses, then log in as teacher and student to try the full workflow.
 
 ---
 
