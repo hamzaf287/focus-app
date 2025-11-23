@@ -138,10 +138,9 @@ cd focus_app
    ```
 
 4. Configure MongoDB (database):
-   - Open `backend/config.py` in a text editor.
-   - Find the `MONGO_URI` setting.
-   - If you already have a MongoDB connection string, paste it there.
-   - Otherwise, you can leave the existing value and use the same database that was used during development.
+   - **Good news:** this project already has a working MongoDB connection configured in `backend/config.py`.
+   - You do **not** need to change anything for local testing.
+   - If you run into database‑related errors, just tell the project owner; they can adjust the shared database settings if needed.
 
 5. Start the backend server:
 
