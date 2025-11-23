@@ -218,12 +218,56 @@ const TeacherDashboard = () => {
     }
   };
 
-  const downloadReport = (reportId) => {
-    window.location.href = `http://localhost:5000/teacher/reports/${reportId}/download`;
+  const downloadReport = async (reportId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/teacher/reports/${reportId}/download`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download report');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `focus_report_${reportId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download error:', error);
+      showToast('Failed to download report', 'error');
+    }
   };
 
-  const downloadCombinedReport = (sessionId) => {
-    window.location.href = `http://localhost:5000/teacher/sessions/${sessionId}/download`;
+  const downloadCombinedReport = async (sessionId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/teacher/sessions/${sessionId}/download`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download combined report');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `session_report_${sessionId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download error:', error);
+      showToast('Failed to download combined report', 'error');
+    }
   };
 
   const copySessionLink = async (sessionId) => {

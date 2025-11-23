@@ -145,16 +145,31 @@ def generate_frames(session_id):
     """Generate video frames with focus detection"""
     session_data = active_sessions.get(session_id)
     if not session_data:
+        print(f"[VideoFeed] No session data found for {session_id}")
         return
+
+    frame_count = 0
+    error_count = 0
+    max_errors = 10  # Stop after too many consecutive errors
 
     while session_data['is_running']:
         camera = session_data['camera']
         if camera is None:
+            print(f"[VideoFeed] Camera is None for session {session_id}")
             break
 
         success, frame = camera.read()
-        if not success:
-            break
+        if not success or frame is None:
+            error_count += 1
+            print(f"[VideoFeed] Failed to read frame (error {error_count}/{max_errors})")
+            if error_count >= max_errors:
+                print(f"[VideoFeed] Too many errors, stopping feed")
+                break
+            time.sleep(0.1)  # Brief pause before retry
+            continue
+
+        error_count = 0  # Reset error count on successful read
+        frame_count += 1
 
         status = analyze_frame(frame)
         session_data['total_frames'] += 1
@@ -169,10 +184,16 @@ def generate_frames(session_id):
         cv2.putText(frame, f"Status: {status}", (20, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
+        # Add frame counter for debugging
+        cv2.putText(frame, f"Frame: {frame_count}", (20, 80),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
         _, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+    print(f"[VideoFeed] Stream ended for session {session_id}, total frames: {frame_count}")
 
 
 # ==================== Focus Detection Routes ====================
@@ -195,14 +216,37 @@ def start_focus_detection(session_id):
     if session_id in active_sessions:
         return jsonify({"error": "Session already active"}), 409
 
-    # Initialize camera
-    camera = cv2.VideoCapture(0)
-    if not camera.isOpened():
-        return jsonify({"error": "Could not access camera"}), 500
+    # Initialize camera - try multiple indices
+    camera = None
+    camera_index = -1
+    for idx in [0, 1, 2]:
+        cam = cv2.VideoCapture(idx, cv2.CAP_DSHOW)  # Use DirectShow on Windows
+        if cam.isOpened():
+            # Test if we can actually read a frame
+            ret, test_frame = cam.read()
+            if ret and test_frame is not None:
+                camera = cam
+                camera_index = idx
+                print(f"[Camera] Successfully opened camera at index {idx}")
+                break
+            else:
+                cam.release()
+                print(f"[Camera] Camera {idx} opened but couldn't read frame")
+        else:
+            print(f"[Camera] Could not open camera at index {idx}")
+
+    if camera is None:
+        return jsonify({"error": "Could not access camera. Please ensure your camera is connected and not in use by another application."}), 500
+
+    # Set camera properties for better performance
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    camera.set(cv2.CAP_PROP_FPS, 30)
 
     # Store session data
     active_sessions[session_id] = {
         'camera': camera,
+        'camera_index': camera_index,
         'is_running': True,
         'focused_frames': 0,
         'distracted_frames': 0,
@@ -212,7 +256,7 @@ def start_focus_detection(session_id):
         'tab_switches': []  # track tab/window switches from the client
     }
 
-    return jsonify({"status": "Focus detection started", "session_id": session_id})
+    return jsonify({"status": "Focus detection started", "session_id": session_id, "camera_index": camera_index})
 
 
 @app.route('/session/<session_id>/video_feed')

@@ -65,7 +65,7 @@ export const studentAPI = {
   unenrollCourse: (courseId) => API.post(`/student/courses/${courseId}/unenroll`),
   getEnrollmentRequests: () => API.get('/student/enrollment-requests'),
   getReports: () => API.get('/student/reports'),
-  downloadReportUrl: (reportId) => `${API_BASE_URL}/student/reports/${reportId}/download`,
+  downloadReport: (reportId) => `${API_BASE_URL}/student/reports/${reportId}/download`,
 };
 
 // Teacher endpoints

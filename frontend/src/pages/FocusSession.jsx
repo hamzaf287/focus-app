@@ -83,17 +83,19 @@ const FocusSession = () => {
       setIsRunning(true);
       setSessionStatus('running');
       setElapsedTime(0);
-
-      // Set video source to stream
-      if (videoRef.current) {
-        videoRef.current.src = sessionAPI.getVideoFeedUrl(sessionId);
-      }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to start session. Make sure camera is available.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Set video source after isRunning changes and img element is rendered
+  useEffect(() => {
+    if (isRunning && videoRef.current) {
+      videoRef.current.src = sessionAPI.getVideoFeedUrl(sessionId);
+    }
+  }, [isRunning, sessionId]);
 
   const stopSession = async () => {
     setLoading(true);

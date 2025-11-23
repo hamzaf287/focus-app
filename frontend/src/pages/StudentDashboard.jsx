@@ -159,8 +159,30 @@ const StudentDashboard = () => {
     navigate(`/session/${sessionId}`);
   };
 
-  const downloadReport = (reportId) => {
-    window.location.href = studentAPI.downloadReport(reportId);
+  const downloadReport = async (reportId) => {
+    try {
+      const response = await fetch(studentAPI.downloadReport(reportId), {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download report');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `focus_report_${reportId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download error:', error);
+      showToast('Failed to download report', 'error');
+    }
   };
 
   const showToast = (message, type) => {
